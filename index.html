@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>人生Online</title>
+<style>
+    /* 之前的樣式 */
+    body { background-color: #1a1a1a; color: #ffffff; font-family: sans-serif; padding: 15px; margin: 0; }
+    .panel { border: 2px solid #4CAF50; border-radius: 10px; padding: 15px; margin-bottom: 20px; background-color: #2a2a2a; }
+    h2 { color: #4CAF50; margin-top: 0; border-bottom: 1px solid #4CAF50; padding-bottom: 5px; }
+    .bar-bg { background-color: #444; border-radius: 5px; height: 15px; width: 100%; margin: 8px 0; overflow: hidden;}
+    .bar-fill { background-color: #4CAF50; height: 100%; border-radius: 5px; width: 0%; transition: width 0.3s ease-out; }
+    .skill-list { list-style: none; padding: 0; margin: 0; }
+    
+    /* 新的樣式 - 用於佈局和按鈕 */
+    .skill-item { display: flex; flex-direction: column; margin-bottom: 15px; }
+    .skill-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .skill-info { display: flex; align-items: baseline; }
+    .skill-name { font-size: 18px; font-weight: bold; margin-right: 10px; }
+    .skill-level { font-size: 14px; color: #aaa; }
+    .skill-exp-text { font-size: 12px; color: #ddd; }
+
+    .action-btn { 
+        background-color: #4CAF50; 
+        color: white; 
+        border: none; 
+        padding: 8px 15px; 
+        border-radius: 5px; 
+        font-size: 14px; 
+        cursor: pointer; 
+        transition: background-color 0.2s; 
+    }
+    .action-btn:active { background-color: #3e8e41; }
+</style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #4CAF50;">人生Online</h1>
+
+    <div class="panel">
+        <h2>角色狀態</h2>
+        <div class="skill-header">
+            <div class="skill-info">
+                <span class="skill-name">玩家等級</span>
+                <span id="player-level-val" class="skill-level">Lv. --</span>
+            </div>
+            <span id="player-exp-text" class="skill-exp-text">EXP -- / --</span>
+        </div>
+        <div class="bar-bg"><div id="player-exp-bar" class="bar-fill"></div></div>
+    </div>
+
+    <div class="panel">
+        <h2>生活技能</h2>
+        <ul class="skill-list">
+            <li class="skill-item">
+                <div class="skill-header">
+                    <div class="skill-info">
+                        <span class="skill-name">健身</span>
+                        <span id="skill-gym-level-val" class="skill-level">Lv. --</span>
+                    </div>
+                    <button class="action-btn" onclick="gainExp('gym', 10)">健身 (+10 EXP)</button>
+                </div>
+                <div class="bar-bg"><div id="skill-gym-exp-bar" class="bar-fill"></div></div>
+            </li>
+            <li class="skill-item">
+                <div class="skill-header">
+                    <div class="skill-info">
+                        <span class="skill-name">閱讀</span>
+                        <span id="skill-reading-level-val" class="skill-level">Lv. --</span>
+                    </div>
+                    <button class="action-btn" onclick="gainExp('reading', 5)">閱讀 (+5 EXP)</button>
+                </div>
+                <div class="bar-bg"><div id="skill-reading-exp-bar" class="bar-fill"></div></div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="panel">
+        <h2>專業技能</h2>
+        <ul class="skill-list">
+            <li class="skill-item">
+                <div class="skill-header">
+                    <div class="skill-info">
+                        <span class="skill-name">工作專業</span>
+                        <span id="skill-work-level-val" class="skill-level">Lv. --</span>
+                    </div>
+                    <button class="action-btn" onclick="gainExp('work', 20)">工作時段 (+20 EXP)</button>
+                </div>
+                <div class="bar-bg"><div id="skill-work-exp-bar" class="bar-fill"></div></div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="panel">
+        <h2>資源與成就</h2>
+        <div class="skill-header"><span>可用資源 (金幣)</span><span>1500</span></div>
+        <div class="skill-header"><span>最新成就</span><span>踏出第一步</span></div>
+    </div>
+
+    <script>
+        // 1. 定義初始數據與升級邏輯
+        const EXP_PER_LEVEL = 100; // 每一級需要的經驗值 (簡化版)
+        const MAX_LEVEL = 100;
+
+        let gameState = {
+            player: { level: 1, exp: 0 },
+            skills: {
+                gym: { level: 1, exp: 0 },
+                reading: { level: 1, exp: 0 },
+                work: { level: 1, exp: 0 }
+            }
+        };
+
+        // 2. 初始化：從 localStorage 讀取進度
+        function initGame() {
+            const savedState = localStorage.getItem('lifeOnlineState');
+            if (savedState) {
+                gameState = JSON.parse(savedState);
+            }
+            updateUI();
+        }
+
+        // 3. 核心函數：獲得經驗值並檢查升級
+        function gainExp(type, amount) {
+            let target;
+            let levelUp = false;
+
+            if (type === 'player') {
+                target = gameState.player;
+            } else if (gameState.skills[type]) {
+                target = gameState.skills[type];
+            } else {
+                return; // 未知類型
+            }
+
+            if (target.level >= MAX_LEVEL) return; // 已滿級
+
+            target.exp += amount;
+
+            // 升級邏輯
+            while (target.exp >= EXP_PER_LEVEL) {
+                target.exp -= EXP_PER_LEVEL;
+                target.level++;
+                levelUp = true;
+                
+                // 可選：升級時獎勵金幣或顯示彈窗
+                if (type !== 'player') {
+                    // 技能升級也給玩家一些經驗
+                    gainExp('player', 10);
+                }
+            }
+
+            saveGame();
+            updateUI();
+        }
+
+        // 4. 保存進度到 localStorage
+        function saveGame() {
+            localStorage.setItem('lifeOnlineState', JSON.stringify(gameState));
+        }
+
+        // 5. 更新介面顯示
+        function updateUI() {
+            // 更新玩家狀態
+            document.getElementById('player-level-val').innerText = 'Lv. ' + gameState.player.level;
+            document.getElementById('player-exp-text').innerText = 'EXP ' + gameState.player.exp + ' / ' + EXP_PER_LEVEL;
+            let playerProgress = (gameState.player.exp / EXP_PER_LEVEL) * 100;
+            document.getElementById('player-exp-bar').style.width = playerProgress + '%';
+
+            // 更新技能狀態
+            updateSkillUI('gym');
+            updateSkillUI('reading');
+            updateSkillUI('work');
+        }
+
+        // 輔助函數：更新單個技能的 UI
+        function updateSkillUI(skillId) {
+            const skill = gameState.skills[skillId];
+            document.getElementById('skill-' + skillId + '-level-val').innerText = 'Lv. ' + skill.level;
+            let skillProgress = (skill.exp / EXP_PER_LEVEL) * 100;
+            document.getElementById('skill-' + skillId + '-exp-bar').style.width = skillProgress + '%';
+        }
+
+        // 啟動遊戲
+        window.onload = initGame;
+    </script>
+</body>
+</html>
