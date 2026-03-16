@@ -48,7 +48,6 @@
     
     #notification { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: #00FFFF; color: #000; padding: 10px 20px; border-radius: 5px; font-weight: bold; display: none; z-index: 100; }
 
-    /* Modal 樣式 */
     #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; }
     .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #0A1128; border: 1px solid #00FFFF; padding: 20px; width: 85%; max-width: 320px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,255,255,0.3); }
     .modal-box input { width: 100%; box-sizing: border-box; background: #050A1F; border: 1px solid #8A9BB8; color: #FFF; padding: 8px; margin-top: 5px; margin-bottom: 15px; font-family: monospace; }
@@ -65,15 +64,15 @@
             <label>流動資產 (HKD)：</label>
             <input type="number" id="input-cash" placeholder="輸入數字">
             <div style="display: flex; gap: 10px;">
-                <button class="action-btn" style="flex: 1;" onclick="saveConfig()">儲存變更</button>
-                <button class="action-btn" style="flex: 1; border-color: #FF3366; color: #FF3366;" onclick="closeModal()">取消</button>
+                <button class="action-btn" style="flex: 1;" onclick="window.saveConfig()">儲存變更</button>
+                <button class="action-btn" style="flex: 1; border-color: #FF3366; color: #FF3366;" onclick="window.closeModal()">取消</button>
             </div>
         </div>
     </div>
 
     <div class="panel">
-        <h2>STATUS WINDOW <button class="edit-btn" style="float:right;" onclick="openModal()">⚙️ 設定</button></h2>
-        <div class="status-row"><span>職業: <span id="p-job" class="neon-text">未設定</span></span></div>
+        <h2>STATUS WINDOW <button class="edit-btn" style="float:right;" onclick="window.openModal()">⚙️ 設定</button></h2>
+        <div class="status-row"><span>職業: <span id="p-job" class="neon-text">載入中...</span></span></div>
         <div class="status-row"><span>等級: <span id="p-lv" class="neon-text">1</span> (<span id="p-tier" class="tier-text">初心者</span>)</span></div>
         <div class="bar-bg"><div id="p-exp" class="bar-fill bar-exp"></div></div>
         
@@ -112,12 +111,12 @@
     <div class="panel">
         <h2>ACTION CONSOLE</h2>
         <div class="btn-grid">
-            <button class="action-btn" onclick="doAction('VIT', 20, '下肢康復訓練', null)">下肢康復訓練</button>
-            <button class="action-btn" onclick="doAction('INT', 15, '市場趨勢分析', 'strat')">市場趨勢分析</button>
-            <button class="action-btn" onclick="doAction('INT', 15, '資產配置優化', 'asset')">資產配置優化</button>
-            <button class="action-btn" onclick="doAction('CHA', 10, '高階商務談判', 'comm')">高階商務談判</button>
-            <button class="action-btn" onclick="doAction('STR', 15, '核心負重訓練', null)">核心負重訓練</button>
-            <button class="action-btn" onclick="doAction('AGI', 10, '高強度有氧', null)">高強度有氧</button>
+            <button class="action-btn" onclick="window.doAction('VIT', 20, '下肢康復訓練', null)">下肢康復訓練</button>
+            <button class="action-btn" onclick="window.doAction('INT', 15, '市場趨勢分析', 'strat')">市場趨勢分析</button>
+            <button class="action-btn" onclick="window.doAction('INT', 15, '資產配置優化', 'asset')">資產配置優化</button>
+            <button class="action-btn" onclick="window.doAction('CHA', 10, '高階商務談判', 'comm')">高階商務談判</button>
+            <button class="action-btn" onclick="window.doAction('STR', 15, '核心負重訓練', null)">核心負重訓練</button>
+            <button class="action-btn" onclick="window.doAction('AGI', 10, '高強度有氧', null)">高強度有氧</button>
         </div>
     </div>
 
@@ -132,7 +131,23 @@
         <div class="log-box" id="sys-log"></div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgwyo2bWYjFAuX4zPg1LNpgbGQqDDOmnI",
+            authDomain: "life-online-dac47.firebaseapp.com",
+            projectId: "life-online-dac47",
+            storageBucket: "life-online-dac47.firebasestorage.app",
+            messagingSenderId: "1007736463039",
+            appId: "1:1007736463039:web:64fb96caa559a3c7bb300a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbPath = ref(database, 'saveData/mainProfile');
+
         const EXP_REQ = 100;
         const STAGNATION_MS = 7 * 24 * 60 * 60 * 1000;
         
@@ -152,29 +167,40 @@
                 asset: { lv: 1, exp: 0, dailyRate: 0 }
             },
             achievements: { rehabCount: 0 },
-            logs: ["V4 系統初始化完成。", "請點擊右上角設定個人參數。"]
+            logs: ["系統連線中..."]
         };
 
         let radarChart;
 
-        function init() {
-            let saved = localStorage.getItem('lifeOnlineDB_v4');
-            if(saved) db = JSON.parse(saved);
+        async function init() {
             initChart();
-            updateUI();
+            try {
+                const snapshot = await get(dbPath);
+                if (snapshot.exists()) {
+                    db = snapshot.val();
+                    addLog("已載入雲端存檔。");
+                } else {
+                    addLog("建立全新雲端存檔。");
+                    save();
+                }
+                updateUI();
+            } catch (error) {
+                addLog("資料庫連線失敗，請檢查權限設定。");
+                updateUI();
+            }
         }
 
-        function openModal() {
+        window.openModal = function() {
             document.getElementById('input-job').value = db.player.job !== '未設定' ? db.player.job : '';
             document.getElementById('input-cash').value = db.player.cash;
             document.getElementById('modal-overlay').style.display = 'block';
         }
 
-        function closeModal() {
+        window.closeModal = function() {
             document.getElementById('modal-overlay').style.display = 'none';
         }
 
-        function saveConfig() {
+        window.saveConfig = function() {
             let newJob = document.getElementById('input-job').value || '未設定';
             let newCash = parseInt(document.getElementById('input-cash').value) || 0;
             
@@ -187,11 +213,11 @@
                 document.getElementById('ach-gold').innerText = "未達成";
             }
             
-            addLog("系統參數已手動更新。");
+            addLog("系統參數已上傳至雲端。");
             save();
             updateUI();
             closeModal();
-            showFX("CONFIG SAVED");
+            showFX("CLOUD SAVED");
         }
 
         function getTier(lv) {
@@ -201,7 +227,7 @@
             return "大師";
         }
 
-        function doAction(stat, expGain, actName, skillKey) {
+        window.doAction = function(stat, expGain, actName, skillKey) {
             let now = Date.now();
             db.attr[stat].exp += expGain;
             db.attr[stat].last = now;
@@ -215,7 +241,7 @@
             db.player.exp += Math.floor(expGain / 2);
             if(actName === '下肢康復訓練') db.achievements.rehabCount += 1;
 
-            addLog(`執行 [${actName}]：${stat} EXP +${expGain}`);
+            addLog(`[雲端寫入] ${actName}：${stat} EXP +${expGain}`);
             
             checkLevelUp('attr', stat);
             checkPlayerLevelUp();
@@ -245,7 +271,12 @@
             }
         }
 
-        function save() { localStorage.setItem('lifeOnlineDB_v4', JSON.stringify(db)); }
+        function save() { 
+            set(dbPath, db).catch((error) => {
+                console.error(error);
+                showFX("ERROR");
+            }); 
+        }
 
         function updateUI() {
             document.getElementById('p-job').innerText = db.player.job;
