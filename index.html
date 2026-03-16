@@ -8,7 +8,7 @@
 <style>
     body { background-color: #050A1F; color: #E0E0E0; font-family: 'Courier New', Courier, monospace; padding: 10px; margin: 0; font-size: 14px; }
     .panel { border: 1px solid #00FFFF; box-shadow: 0 0 8px rgba(0,255,255,0.2); border-radius: 5px; padding: 12px; margin-bottom: 15px; background-color: #0A1128; position: relative; }
-    h2 { color: #00FFFF; font-size: 16px; margin-top: 0; border-bottom: 1px solid #00FFFF; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+    h2 { color: #00FFFF; font-size: 16px; margin-top: 0; border-bottom: 1px solid #00FFFF; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
     
     .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .neon-text { color: #00FFFF; font-weight: bold; }
@@ -28,9 +28,21 @@
     .attr-name { font-size: 12px; color: #8A9BB8; }
     .attr-val { font-size: 14px; font-weight: bold; color: #FFF; display: flex; justify-content: space-between;}
 
+    /* 7大素質樣式 */
+    .quality-row { display: flex; justify-content: space-between; align-items: center; background-color: #111A3A; padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; }
+    .quality-name { font-size: 13px; color: #A0C0FF; width: 80px;}
+    .quality-controls { display: flex; align-items: center; gap: 10px; }
+    .q-btn { background: #050A1F; color: #00FFFF; border: 1px solid #00FFFF; border-radius: 3px; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;}
+    .q-btn:active { background: #00FFFF; color: #050A1F; }
+    .q-val { font-size: 14px; color: #FFF; font-weight: bold; width: 30px; text-align: center; }
+
     .skill-section { margin-top: 10px; }
-    .skill-name { color: #A0C0FF; font-size: 13px; }
-    .skill-proj { color: #4CAF50; font-size: 11px; float: right; }
+    .skill-name { color: #A0C0FF; font-size: 13px; display: flex; justify-content: space-between; align-items: center;}
+    .skill-proj { color: #4CAF50; font-size: 11px; }
+    
+    .custom-skill-header { display: flex; justify-content: space-between; align-items: center; margin-top: 2px;}
+    .cs-btn { background: transparent; border: 1px solid #4CAF50; color: #4CAF50; padding: 2px 8px; border-radius: 3px; font-size: 10px; cursor: pointer; margin-left: 5px;}
+    .cs-del { border-color: #FF3366; color: #FF3366; }
 
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     .action-btn { 
@@ -40,7 +52,7 @@
     }
     .action-btn:active { background-color: #00FFFF; color: #050A1F; }
     
-    .edit-btn { background-color: #111A3A; color: #A0C0FF; border: 1px solid #A0C0FF; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer; }
+    .edit-btn { background-color: #111A3A; color: #A0C0FF; border: 1px solid #A0C0FF; padding: 4px 8px; border-radius: 3px; font-size: 11px; cursor: pointer; }
 
     .achieve-box { font-size: 12px; color: #FFD700; margin-bottom: 5px; display: flex; justify-content: space-between; }
     
@@ -58,7 +70,7 @@
 
     <div id="modal-overlay">
         <div class="modal-box">
-            <h2>系統參數設定</h2>
+            <h2 style="border:none;">系統參數設定</h2>
             <label>職業/身分：</label>
             <input type="text" id="input-job" placeholder="例如：學生、工程師">
             <label>流動資產 (HKD)：</label>
@@ -71,7 +83,7 @@
     </div>
 
     <div class="panel">
-        <h2>STATUS WINDOW <button class="edit-btn" style="float:right;" onclick="window.openModal()">⚙️ 設定</button></h2>
+        <h2>STATUS WINDOW <button class="edit-btn" onclick="window.openModal()">⚙️ 設定</button></h2>
         <div class="status-row"><span>職業: <span id="p-job" class="neon-text">載入中...</span></span></div>
         <div class="status-row"><span>等級: <span id="p-lv" class="neon-text">1</span> (<span id="p-tier" class="tier-text">初心者</span>)</span></div>
         <div class="bar-bg"><div id="p-exp" class="bar-fill bar-exp"></div></div>
@@ -97,33 +109,24 @@
     </div>
 
     <div class="panel">
-        <h2>SKILL TREE & PROJECTION</h2>
-        <div class="skill-section">
-            <div class="skill-name">【專業】戰略決策 <span class="skill-proj" id="proj-strat">1年預測: Lv.1</span></div>
-            <div class="bar-bg"><div id="bar-strat" class="bar-fill bar-exp" style="width: 0%"></div></div>
-            <div class="skill-name">【專業】商務溝通 <span class="skill-proj" id="proj-comm">1年預測: Lv.1</span></div>
-            <div class="bar-bg"><div id="bar-comm" class="bar-fill bar-exp" style="width: 0%"></div></div>
-            <div class="skill-name">【生活】資產管理 <span class="skill-proj" id="proj-asset">1年預測: Lv.1</span></div>
-            <div class="bar-bg"><div id="bar-asset" class="bar-fill bar-exp" style="width: 0%"></div></div>
-        </div>
+        <h2>CORE QUALITIES (7大素質)</h2>
+        <div id="qualities-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>TALENTS & SKILLS <button class="edit-btn" style="border-color:#4CAF50; color:#4CAF50;" onclick="window.promptAddSkill()">+ 新增天賦/技能</button></h2>
+        <div class="skill-section" id="custom-skills-container">
+            </div>
     </div>
 
     <div class="panel">
         <h2>ACTION CONSOLE</h2>
         <div class="btn-grid">
             <button class="action-btn" onclick="window.doAction('VIT', 20, '下肢康復訓練', null)">下肢康復訓練</button>
-            <button class="action-btn" onclick="window.doAction('INT', 15, '市場趨勢分析', 'strat')">市場趨勢分析</button>
-            <button class="action-btn" onclick="window.doAction('INT', 15, '資產配置優化', 'asset')">資產配置優化</button>
-            <button class="action-btn" onclick="window.doAction('CHA', 10, '高階商務談判', 'comm')">高階商務談判</button>
             <button class="action-btn" onclick="window.doAction('STR', 15, '核心負重訓練', null)">核心負重訓練</button>
             <button class="action-btn" onclick="window.doAction('AGI', 10, '高強度有氧', null)">高強度有氧</button>
+            <button class="action-btn" onclick="window.doAction('CHA', 10, '高階商務談判', null)">高階商務談判</button>
         </div>
-    </div>
-
-    <div class="panel">
-        <h2>ACHIEVEMENTS</h2>
-        <div class="achieve-box"><span>[康復奇蹟] 進度</span><span id="ach-rehab">0/30</span></div>
-        <div class="achieve-box"><span>[第一桶金] 狀態</span><span id="ach-gold">未達成</span></div>
     </div>
 
     <div class="panel">
@@ -151,21 +154,21 @@
         const EXP_REQ = 100;
         const STAGNATION_MS = 7 * 24 * 60 * 60 * 1000;
         
+        // 七大素質對照表
+        const qNames = { action: '行動力', willpower: '意志力', learning: '學習力', thinking: '思考力', emotion: '情緒控制力', communication: '溝通能力', insight: '洞察力' };
+        
         let db = {
             player: { lv: 1, exp: 0, cash: 0, job: '未設定' },
             res: { hp: 100, mp: 100 },
             attr: {
                 STR: { lv: 1, exp: 0, last: Date.now() },
-                AGI: { lv: 1, exp: 0, last: 0 }, 
+                AGI: { lv: 1, exp: 0, last: Date.now() }, 
                 INT: { lv: 1, exp: 0, last: Date.now() },
                 VIT: { lv: 1, exp: 0, last: Date.now() },
                 CHA: { lv: 1, exp: 0, last: Date.now() }
             },
-            skills: {
-                strat: { lv: 1, exp: 0, dailyRate: 0 },
-                comm: { lv: 1, exp: 0, dailyRate: 0 },
-                asset: { lv: 1, exp: 0, dailyRate: 0 }
-            },
+            qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
+            customSkills: {},
             achievements: { rehabCount: 0 },
             logs: ["系統連線中..."]
         };
@@ -177,7 +180,11 @@
             try {
                 const snapshot = await get(dbPath);
                 if (snapshot.exists()) {
-                    db = snapshot.val();
+                    let cloudData = snapshot.val();
+                    // 確保舊玩家載入時唔會缺少新參數
+                    if(!cloudData.qualities) cloudData.qualities = { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 };
+                    if(!cloudData.customSkills) cloudData.customSkills = {};
+                    db = cloudData;
                     addLog("已載入雲端存檔。");
                 } else {
                     addLog("建立全新雲端存檔。");
@@ -196,86 +203,91 @@
             document.getElementById('modal-overlay').style.display = 'block';
         }
 
-        window.closeModal = function() {
-            document.getElementById('modal-overlay').style.display = 'none';
-        }
+        window.closeModal = function() { document.getElementById('modal-overlay').style.display = 'none'; }
 
         window.saveConfig = function() {
-            let newJob = document.getElementById('input-job').value || '未設定';
-            let newCash = parseInt(document.getElementById('input-cash').value) || 0;
-            
-            db.player.job = newJob;
-            db.player.cash = newCash;
-            
-            if(newCash >= 1000000) {
-                document.getElementById('ach-gold').innerText = "已達成";
-            } else {
-                document.getElementById('ach-gold').innerText = "未達成";
-            }
-            
+            db.player.job = document.getElementById('input-job').value || '未設定';
+            db.player.cash = parseInt(document.getElementById('input-cash').value) || 0;
             addLog("系統參數已上傳至雲端。");
-            save();
-            updateUI();
-            closeModal();
-            showFX("CLOUD SAVED");
+            save(); updateUI(); closeModal(); showFX("CONFIG SAVED");
         }
 
-        function getTier(lv) {
-            if(lv <= 20) return "初心者";
-            if(lv <= 50) return "熟練者";
-            if(lv <= 80) return "專家";
-            return "大師";
+        // ================= 7大素質邏輯 =================
+        window.changeQuality = function(key, delta) {
+            let val = db.qualities[key] || 0;
+            val += delta;
+            if(val < 0) val = 0;
+            if(val > 10) val = 10;
+            db.qualities[key] = val;
+            addLog(`調整素質：[${qNames[key]}] 變更為 ${val}/10`);
+            save(); updateUI();
         }
 
-        window.doAction = function(stat, expGain, actName, skillKey) {
+        // ================= 自定義天賦技能邏輯 =================
+        window.promptAddSkill = function() {
+            let name = prompt("請為你的新天賦或技能命名：\n(例如：3D建模、日語對話、鋼琴)");
+            if(name && name.trim() !== "") {
+                let id = 'sk_' + Date.now(); // 產生唯一ID
+                if(!db.customSkills) db.customSkills = {};
+                db.customSkills[id] = { name: name.trim(), lv: 1, exp: 0 };
+                addLog(`解鎖新天賦/技能：【${name}】`);
+                save(); updateUI(); showFX("NEW SKILL");
+            }
+        }
+
+        window.trainCustomSkill = function(id) {
+            let sk = db.customSkills[id];
+            sk.exp += 15; // 每次鍛鍊增加 15 EXP
+            addLog(`鍛鍊【${sk.name}】：EXP +15`);
+            if(sk.exp >= EXP_REQ) {
+                sk.exp -= EXP_REQ;
+                sk.lv += 1;
+                addLog(`[突破] ${sk.name} 達到 Lv.${sk.lv}`);
+                showFX("SKILL UP!");
+            }
+            save(); updateUI();
+        }
+
+        window.deleteCustomSkill = function(id) {
+            if(confirm(`確定要刪除技能【${db.customSkills[id].name}】嗎？這將無法復原。`)) {
+                addLog(`已遺忘技能：${db.customSkills[id].name}`);
+                delete db.customSkills[id];
+                save(); updateUI();
+            }
+        }
+
+        window.doAction = function(stat, expGain, actName) {
             let now = Date.now();
             db.attr[stat].exp += expGain;
             db.attr[stat].last = now;
-            
-            if(skillKey) {
-                db.skills[skillKey].exp += expGain;
-                db.skills[skillKey].dailyRate = expGain; 
-                checkLevelUp('skills', skillKey);
-            }
             
             db.player.exp += Math.floor(expGain / 2);
             if(actName === '下肢康復訓練') db.achievements.rehabCount += 1;
 
             addLog(`[雲端寫入] ${actName}：${stat} EXP +${expGain}`);
             
-            checkLevelUp('attr', stat);
-            checkPlayerLevelUp();
-            
-            save();
-            updateUI();
-        }
-
-        function checkLevelUp(category, key) {
-            let target = db[category][key];
+            let target = db.attr[stat];
             if(target.exp >= EXP_REQ && target.lv < 99) {
                 target.exp -= EXP_REQ;
                 target.lv += 1;
-                addLog(`[提升] ${key} 達到 Lv.${target.lv}`);
                 showFX("LEVEL UP!");
             }
-        }
-
-        function checkPlayerLevelUp() {
+            
             if(db.player.exp >= EXP_REQ && db.player.lv < 99) {
                 db.player.exp -= EXP_REQ;
                 db.player.lv += 1;
-                db.res.hp = 100; 
-                db.res.mp = 100;
-                addLog(`*** 角色晉升：Lv.${db.player.lv} ***`);
+                db.res.hp = 100; db.res.mp = 100;
                 showFX("RANK UP!");
             }
+            save(); updateUI();
         }
 
         function save() { 
-            set(dbPath, db).catch((error) => {
-                console.error(error);
-                showFX("ERROR");
-            }); 
+            set(dbPath, db).catch((error) => { console.error(error); showFX("ERROR"); }); 
+        }
+
+        function getTier(lv) {
+            if(lv <= 20) return "初心者"; if(lv <= 50) return "熟練者"; if(lv <= 80) return "專家"; return "大師";
         }
 
         function updateUI() {
@@ -289,23 +301,48 @@
             ['STR', 'AGI', 'INT', 'VIT', 'CHA'].forEach(stat => {
                 let obj = db.attr[stat];
                 document.getElementById(`v-${stat.toLowerCase()}`).innerText = obj.lv;
-                
                 let el = document.getElementById(`ui-${stat}`);
-                if(now - obj.last > STAGNATION_MS) {
-                    el.classList.add('stagnant');
-                } else {
-                    el.classList.remove('stagnant');
+                if(now - obj.last > STAGNATION_MS) { el.classList.add('stagnant'); } else { el.classList.remove('stagnant'); }
+            });
+
+            // 渲染 7大素質
+            let qHtml = '';
+            for(let key in qNames) {
+                let val = db.qualities[key] || 0;
+                qHtml += `
+                <div class="quality-row">
+                    <span class="quality-name">${qNames[key]}</span>
+                    <div class="bar-bg" style="margin:0 10px; flex:1; height:6px;"><div class="bar-fill" style="background-color:#FFD700; width:${val*10}%"></div></div>
+                    <div class="quality-controls">
+                        <button class="q-btn" onclick="window.changeQuality('${key}', -1)">-</button>
+                        <span class="q-val">${val}</span>
+                        <button class="q-btn" onclick="window.changeQuality('${key}', 1)">+</button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('qualities-container').innerHTML = qHtml;
+
+            // 渲染自定義技能
+            let csHtml = '';
+            if(db.customSkills && Object.keys(db.customSkills).length > 0) {
+                for(let id in db.customSkills) {
+                    let sk = db.customSkills[id];
+                    csHtml += `
+                    <div style="margin-bottom: 12px;">
+                        <div class="custom-skill-header">
+                            <span class="skill-name">【自定義】${sk.name} (Lv.${sk.lv})</span>
+                            <div>
+                                <button class="cs-btn" onclick="window.trainCustomSkill('${id}')">鍛鍊 +15 EXP</button>
+                                <button class="cs-btn cs-del" onclick="window.deleteCustomSkill('${id}')">刪除</button>
+                            </div>
+                        </div>
+                        <div class="bar-bg" style="margin-top:4px;"><div class="bar-fill bar-exp" style="width: ${(sk.exp / EXP_REQ * 100)}%"></div></div>
+                    </div>`;
                 }
-            });
-
-            ['strat', 'comm', 'asset'].forEach(key => {
-                let s = db.skills[key];
-                document.getElementById(`bar-${key}`).style.width = (s.exp / EXP_REQ * 100) + '%';
-                let projLv = Math.min(99, s.lv + Math.floor((s.dailyRate * 365) / EXP_REQ));
-                document.getElementById(`proj-${key}`).innerText = `1年預測: Lv.${projLv}`;
-            });
-
-            document.getElementById('ach-rehab').innerText = `${db.achievements.rehabCount}/30`;
+            } else {
+                csHtml = '<div style="color:#555; font-size:12px; text-align:center; padding:10px;">目前尚未設定任何天賦或技能。點擊上方按鈕新增。</div>';
+            }
+            document.getElementById('custom-skills-container').innerHTML = csHtml;
 
             radarChart.data.datasets[0].data = [db.attr.STR.lv, db.attr.AGI.lv, db.attr.INT.lv, db.attr.VIT.lv, db.attr.CHA.lv];
             radarChart.update();
@@ -322,21 +359,9 @@
                 type: 'radar',
                 data: {
                     labels: ['STR', 'AGI', 'INT', 'VIT', 'CHA'],
-                    datasets: [{
-                        label: '能力分佈',
-                        data: [1, 1, 1, 1, 1],
-                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
-                        borderColor: '#00FFFF',
-                        pointBackgroundColor: '#00FFFF',
-                        pointBorderColor: '#fff',
-                        borderWidth: 1
-                    }]
+                    datasets: [{ label: '能力分佈', data: [1, 1, 1, 1, 1], backgroundColor: 'rgba(0, 255, 255, 0.2)', borderColor: '#00FFFF', pointBackgroundColor: '#00FFFF', pointBorderColor: '#fff', borderWidth: 1 }]
                 },
-                options: {
-                    scales: { r: { angleLines: { color: '#1A2642' }, grid: { color: '#1A2642' }, pointLabels: { font: { size: 10 } }, ticks: { display: false, min: 0, max: 99 } } },
-                    plugins: { legend: { display: false } },
-                    maintainAspectRatio: false
-                }
+                options: { scales: { r: { angleLines: { color: '#1A2642' }, grid: { color: '#1A2642' }, pointLabels: { font: { size: 10 } }, ticks: { display: false, min: 0, max: 99 } } }, plugins: { legend: { display: false } }, maintainAspectRatio: false }
             });
         }
 
@@ -348,8 +373,7 @@
 
         function showFX(text) {
             let n = document.getElementById('notification');
-            n.innerText = text;
-            n.style.display = 'block';
+            n.innerText = text; n.style.display = 'block';
             setTimeout(() => { n.style.display = 'none'; }, 2000);
         }
 
