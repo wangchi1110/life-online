@@ -17,8 +17,12 @@
     .bar-bg { background-color: #374151; height: 8px; width: 100%; margin: 6px 0 12px 0; border-radius: 9999px; overflow: hidden; }
     .bar-fill { height: 100%; width: 0%; transition: width 0.4s ease; }
     .bar-exp { background-color: #10B981; }
-    .bar-hp { background-color: #EF4444; }
-    .bar-mp { background-color: #3B82F6; }
+
+    /* 10格分段式進度條 (Segmented Bar) */
+    .segmented-bar { display: flex; gap: 4px; height: 10px; width: 100%; margin: 6px 0 14px 0; }
+    .seg-block { flex: 1; border-radius: 2px; background-color: #374151; transition: background-color 0.3s, box-shadow 0.3s; }
+    .seg-hp.filled { background-color: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
+    .seg-mp.filled { background-color: #3B82F6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.4); }
 
     /* 頭像區域 */
     .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
@@ -30,13 +34,6 @@
     .res-controls { display: flex; gap: 4px; }
     .res-btn { background: #374151; border: none; color: #D1D5DB; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
     .res-btn:active { background: #4B5563; }
-
-    /* 屬性方塊 */
-    .attr-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
-    .attr-item { background-color: #111827; padding: 12px; border-radius: 8px; border-left: 4px solid #3B82F6; }
-    .attr-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;}
-    .attr-name { font-size: 14px; color: #9CA3AF; font-weight: 600;}
-    .attr-val { font-size: 15px; color: #F3F4F6; font-weight: 700; font-family: monospace; }
 
     /* 7大素質 */
     .quality-row { display: flex; justify-content: space-between; align-items: center; background-color: #111827; padding: 8px 12px; margin-bottom: 8px; border-radius: 8px; }
@@ -98,10 +95,10 @@
             <h2 style="border:none; margin-bottom: 10px;">新增自訂動作</h2>
             <label>按鈕名稱：</label>
             <input type="text" id="act-name" placeholder="例如：冥想、寫程式">
-            <label>對應提升目標：</label>
+            <label>對應提升目標 (技能)：</label>
             <select id="act-target"></select>
-            <label>每次提升數值 (建議 0.2 至 10)：</label>
-            <input type="number" id="act-val" step="0.1" value="0.2">
+            <label>每次提升數值 (建議 1 至 15)：</label>
+            <input type="number" id="act-val" step="0.1" value="10">
             <div style="display: flex; gap: 10px;">
                 <button class="action-btn" style="flex: 1; background: #3B82F6; color: #FFF;" onclick="window.saveCustomAction()">新增</button>
                 <button class="action-btn" style="flex: 1; border: 1px solid #EF4444; color: #EF4444;" onclick="window.closeModal('modal-action')">取消</button>
@@ -133,7 +130,7 @@
                 <button class="res-btn" onclick="window.adjRes('hp', 999)">滿</button>
             </div>
         </div>
-        <div class="bar-bg"><div class="bar-fill bar-hp" id="bar-hp" style="width: 100%"></div></div>
+        <div class="segmented-bar" id="seg-hp-container"></div>
 
         <div class="status-row">
             <span>MP: <span id="v-mp" class="highlight-text">100</span>/<span id="v-maxmp">100</span></span>
@@ -143,31 +140,9 @@
                 <button class="res-btn" onclick="window.adjRes('mp', 999)">滿</button>
             </div>
         </div>
-        <div class="bar-bg"><div class="bar-fill bar-mp" id="bar-mp" style="width: 100%"></div></div>
+        <div class="segmented-bar" id="seg-mp-container"></div>
 
         <div class="status-row" style="margin-top: 12px;"><span>CASH: <span class="highlight-text">HKD <span id="v-cash">0</span></span></span></div>
-    </div>
-
-    <div class="panel">
-        <h2>ATTRIBUTES (核心素質)</h2>
-        <div class="attr-grid">
-            <div class="attr-item" id="ui-STR">
-                <div class="attr-header"><span class="attr-name">力量 (STR)</span><span class="attr-val"><span id="v-str">0</span> / 100</span></div>
-                <div class="bar-bg" style="margin:0;"><div class="bar-fill" id="bar-str" style="background-color: #3B82F6; width:0%"></div></div>
-            </div>
-            <div class="attr-item" id="ui-VIT">
-                <div class="attr-header"><span class="attr-name">體質 (VIT)</span><span class="attr-val"><span id="v-vit">0</span> / 100</span></div>
-                <div class="bar-bg" style="margin:0;"><div class="bar-fill" id="bar-vit" style="background-color: #3B82F6; width:0%"></div></div>
-            </div>
-            <div class="attr-item" id="ui-AGI">
-                <div class="attr-header"><span class="attr-name">敏捷 (AGI)</span><span class="attr-val"><span id="v-agi">0</span> / 100</span></div>
-                <div class="bar-bg" style="margin:0;"><div class="bar-fill" id="bar-agi" style="background-color: #3B82F6; width:0%"></div></div>
-            </div>
-            <div class="attr-item" id="ui-INT">
-                <div class="attr-header"><span class="attr-name">智力 (INT)</span><span class="attr-val"><span id="v-int">0</span> / 100</span></div>
-                <div class="bar-bg" style="margin:0;"><div class="bar-fill" id="bar-int" style="background-color: #3B82F6; width:0%"></div></div>
-            </div>
-        </div>
     </div>
 
     <div class="panel">
@@ -219,7 +194,7 @@
 
         const EXP_REQ = 100;
         const qNames = { action: '行動力', willpower: '意志力', learning: '學習力', thinking: '思考力', emotion: '情緒控制力', communication: '溝通能力', insight: '洞察力' };
-        const attrNames = { STR: '力量', VIT: '體質', AGI: '敏捷', INT: '智力' };
+        const attrNames = { STR: '力量', VIT: '體質', AGI: '敏捷', INT: '智力' }; // 保留供舊動作讀取
         
         let db = {
             player: { lv: 1, exp: 0, cash: 0, job: '未設定', avatar: '' },
@@ -253,12 +228,6 @@
                     addLog("已載入雲端存檔。");
                 } else {
                     addLog("建立全新雲端存檔。");
-                    db.customActions = {
-                        'act_1': { name: '做Gym', targetType: 'attr', targetId: 'STR', val: 0.2 },
-                        'act_2': { name: '做帶氧操練', targetType: 'attr', targetId: 'VIT', val: 0.2 },
-                        'act_3': { name: '跑步', targetType: 'attr', targetId: 'AGI', val: 0.2 },
-                        'act_4': { name: '睇書學習', targetType: 'attr', targetId: 'INT', val: 0.2 }
-                    };
                     save();
                 }
                 updateUI();
@@ -268,7 +237,6 @@
             }
         }
 
-        // 頭像上傳邏輯 (自動壓縮)
         window.handleAvatarUpload = function(event) {
             const file = event.target.files[0];
             if(!file) return;
@@ -292,7 +260,6 @@
             reader.readAsDataURL(file);
         }
 
-        // 資源手動調整
         window.adjRes = function(type, val) {
             let maxHp = 100 + Math.floor(db.attr.VIT.pts);
             let maxMp = 100 + Math.floor(db.attr.INT.pts);
@@ -329,9 +296,9 @@
         window.openActionModal = function() {
             let select = document.getElementById('act-target');
             let options = '';
-            for(let key in attrNames) { options += `<option value="attr_${key}">素質: ${attrNames[key]}</option>`; }
+            // 移除了素質，只能選擇技能作為動作目標
             for(let id in db.customSkills) { options += `<option value="skill_${id}">技能: ${db.customSkills[id].name}</option>`; }
-            select.innerHTML = options;
+            select.innerHTML = options || '<option value="">請先新增技能</option>';
             
             document.getElementById('act-name').value = '';
             document.getElementById('modal-action').style.display = 'block';
@@ -342,7 +309,7 @@
             let targetRaw = document.getElementById('act-target').value;
             let val = parseFloat(document.getElementById('act-val').value);
             
-            if(!name || !targetRaw || isNaN(val)) return alert("請填寫完整資訊");
+            if(!name || !targetRaw || isNaN(val)) return alert("請填寫完整資訊 (如果冇選項，請先新增技能)");
             
             let parts = targetRaw.split('_');
             let type = parts[0];
@@ -442,17 +409,24 @@
             
             document.getElementById('v-hp').innerText = db.res.hp;
             document.getElementById('v-maxhp').innerText = maxHp;
-            document.getElementById('bar-hp').style.width = (db.res.hp / maxHp * 100) + '%';
-            
             document.getElementById('v-mp').innerText = db.res.mp;
             document.getElementById('v-maxmp').innerText = maxMp;
-            document.getElementById('bar-mp').style.width = (db.res.mp / maxMp * 100) + '%';
 
-            ['STR', 'VIT', 'AGI', 'INT'].forEach(stat => {
-                let pts = db.attr[stat].pts || 0;
-                document.getElementById(`v-${stat.toLowerCase()}`).innerText = pts;
-                document.getElementById(`bar-${stat.toLowerCase()}`).style.width = pts + '%';
-            });
+            // 渲染 HP 10格進度條
+            let hpBlocks = Math.ceil((db.res.hp / maxHp) * 10);
+            let hpSegments = '';
+            for(let i=0; i<10; i++) {
+                hpSegments += `<div class="seg-block ${i < hpBlocks ? 'seg-hp filled' : ''}"></div>`;
+            }
+            document.getElementById('seg-hp-container').innerHTML = hpSegments;
+
+            // 渲染 MP 10格進度條
+            let mpBlocks = Math.ceil((db.res.mp / maxMp) * 10);
+            let mpSegments = '';
+            for(let i=0; i<10; i++) {
+                mpSegments += `<div class="seg-block ${i < mpBlocks ? 'seg-mp filled' : ''}"></div>`;
+            }
+            document.getElementById('seg-mp-container').innerHTML = mpSegments;
 
             let qHtml = '';
             for(let key in qNames) {
