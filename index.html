@@ -131,4 +131,404 @@
             <div class="res-controls">
                 <button class="res-btn" onclick="window.adjRes('hp', -1)">-1</button>
                 <button class="res-btn" onclick="window.adjRes('hp', 1)">+1</button>
-                <button class="res
+                <button class="res-btn" onclick="window.adjRes('hp', 5)">滿</button>
+            </div>
+        </div>
+        <div class="segmented-bar" id="seg-hp-container"></div>
+
+        <div class="status-row">
+            <span>MP: <span id="v-mp" class="highlight-text">5</span>/<span id="v-maxmp">5</span></span>
+            <div class="res-controls">
+                <button class="res-btn" onclick="window.adjRes('mp', -1)">-1</button>
+                <button class="res-btn" onclick="window.adjRes('mp', 1)">+1</button>
+                <button class="res-btn" onclick="window.adjRes('mp', 5)">滿</button>
+            </div>
+        </div>
+        <div class="segmented-bar" id="seg-mp-container"></div>
+
+        <div class="status-row" style="margin-top: 12px;"><span>CASH: <span class="highlight-text">HKD <span id="v-cash">0</span></span></span></div>
+    </div>
+
+    <div class="panel">
+        <h2>PERSONALITY (個性) <button class="edit-btn" onclick="window.promptAddItem('personality')">+ 新增</button></h2>
+        <div class="tag-container" id="personality-container"></div>
+    </div>
+
+    <div class="panel" style="padding: 12px 16px;">
+        <div class="split-grid">
+            <div class="split-col">
+                <h2>隱藏潛能 <button class="edit-btn" onclick="window.promptAddItem('potential')">+</button></h2>
+                <div class="tag-container" id="potentials-container" style="margin-top: 6px;"></div>
+            </div>
+            <div class="split-col">
+                <h2>已開發潛能 <button class="edit-btn" onclick="window.promptAddItem('developed_potential')">+</button></h2>
+                <div class="tag-container" id="developed-potentials-container" style="margin-top: 6px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>TALENTS (天賦) <button class="edit-btn" onclick="window.promptAddItem('talent')">+ 新增</button></h2>
+        <div class="tag-container" id="talents-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>CORE QUALITIES (7大素質)</h2>
+        <div id="qualities-container" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="panel">
+        <h2>SKILLS (技能) <button class="edit-btn" onclick="window.promptAddItem('skill')">+ 新增</button></h2>
+        <div class="skill-section" id="skills-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>ACTION CONSOLE <button class="edit-btn" onclick="window.openActionModal()">+ 自訂動作</button></h2>
+        <div class="btn-grid" id="actions-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>SYSTEM LOG</h2>
+        <div class="log-box" id="sys-log"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgwyo2bWYjFAuX4zPg1LNpgbGQqDDOmnI",
+            authDomain: "life-online-dac47.firebaseapp.com",
+            projectId: "life-online-dac47",
+            storageBucket: "life-online-dac47.firebasestorage.app",
+            messagingSenderId: "1007736463039",
+            appId: "1:1007736463039:web:64fb96caa559a3c7bb300a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbPath = ref(database, 'saveData/mainProfile');
+
+        const EXP_REQ = 100;
+        const qNames = { action: '行動力', willpower: '意志力', learning: '學習力', thinking: '思考力', emotion: '情緒控制力', communication: '溝通能力', insight: '洞察力' };
+        
+        let db = {
+            player: { lv: 1, exp: 0, cash: 0, job: '未設定', avatar: '' },
+            res: { hp: 5, mp: 5 },
+            qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
+            talents: {},
+            personalities: {},
+            potentials: {},
+            developedPotentials: {},
+            customSkills: {},
+            customActions: {},
+            logs: ["系統連線中..."]
+        };
+
+        async function init() {
+            try {
+                const snapshot = await get(dbPath);
+                if (snapshot.exists()) {
+                    let cloudData = snapshot.val();
+                    if(!cloudData.qualities) cloudData.qualities = { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 };
+                    if(!cloudData.talents) cloudData.talents = {};
+                    if(!cloudData.personalities) cloudData.personalities = {};
+                    if(!cloudData.potentials) cloudData.potentials = {};
+                    if(!cloudData.developedPotentials) cloudData.developedPotentials = {};
+                    if(!cloudData.customSkills) cloudData.customSkills = {};
+                    if(!cloudData.customActions) cloudData.customActions = {};
+                    if(!cloudData.res) cloudData.res = { hp: 5, mp: 5 };
+                    
+                    if(cloudData.res.hp > 5) cloudData.res.hp = 5;
+                    if(cloudData.res.mp > 5) cloudData.res.mp = 5;
+
+                    db = cloudData;
+                    addLog("已載入雲端存檔。");
+                } else {
+                    addLog("建立全新雲端存檔。");
+                    save();
+                }
+                updateUI();
+            } catch (error) {
+                addLog("資料庫連線失敗，請檢查網路。");
+                updateUI();
+            }
+        }
+
+        window.handleAvatarUpload = function(event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 150;
+                    let w = img.width; let h = img.height;
+                    if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
+                    else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    db.player.avatar = canvas.toDataURL('image/jpeg', 0.8);
+                    save(); updateUI(); showFX("更新頭像");
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        window.adjRes = function(type, val) {
+            let maxVal = 5;
+            if(type === 'hp') {
+                db.res.hp += val;
+                if(db.res.hp > maxVal) db.res.hp = maxVal;
+                if(db.res.hp < 0) db.res.hp = 0;
+            } else {
+                db.res.mp += val;
+                if(db.res.mp > maxVal) db.res.mp = maxVal;
+                if(db.res.mp < 0) db.res.mp = 0;
+            }
+            save(); updateUI();
+        }
+
+        window.openModal = function(id) {
+            if(id === 'modal-config') {
+                document.getElementById('input-job').value = db.player.job !== '未設定' ? db.player.job : '';
+                document.getElementById('input-cash').value = db.player.cash;
+            }
+            document.getElementById(id).style.display = 'block';
+        }
+
+        window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
+
+        window.saveConfig = function() {
+            db.player.job = document.getElementById('input-job').value || '未設定';
+            db.player.cash = parseInt(document.getElementById('input-cash').value) || 0;
+            addLog("系統參數已儲存。");
+            save(); updateUI(); closeModal('modal-config'); showFX("已儲存");
+        }
+
+        window.openActionModal = function() {
+            let select = document.getElementById('act-target');
+            let options = '';
+            for(let id in db.customSkills) { options += `<option value="skill_${id}">技能: ${db.customSkills[id].name}</option>`; }
+            select.innerHTML = options || '<option value="">請先新增技能</option>';
+            
+            document.getElementById('act-name').value = '';
+            document.getElementById('modal-action').style.display = 'block';
+        }
+
+        window.saveCustomAction = function() {
+            let name = document.getElementById('act-name').value.trim();
+            let targetRaw = document.getElementById('act-target').value;
+            let val = parseFloat(document.getElementById('act-val').value);
+            
+            if(!name || !targetRaw || isNaN(val)) return alert("請填寫完整資訊 (如果冇選項，請先新增技能)");
+            
+            let parts = targetRaw.split('_');
+            let type = parts[0];
+            let targetId = parts.slice(1).join('_'); 
+            
+            let id = 'act_' + Date.now();
+            db.customActions[id] = { name: name, targetType: type, targetId: targetId, val: val };
+            addLog(`新增動作指令：【${name}】`);
+            save(); updateUI(); closeModal('modal-action'); showFX("動作已新增");
+        }
+
+        window.deleteAction = function(id, name, event) {
+            event.stopPropagation();
+            if(confirm(`確認刪除動作【${name}】？`)) {
+                delete db.customActions[id];
+                save(); updateUI();
+            }
+        }
+
+        window.changeQuality = function(key, delta) {
+            let val = db.qualities[key] || 0;
+            val += delta;
+            if(val < 0) val = 0; if(val > 10) val = 10;
+            db.qualities[key] = val;
+            save(); updateUI();
+        }
+
+        window.promptAddItem = function(type) {
+            let label = '技能';
+            let targetDb = db.customSkills;
+            
+            if(type === 'talent') { label = '天賦'; targetDb = db.talents; }
+            else if(type === 'personality') { label = '個性'; targetDb = db.personalities; }
+            else if(type === 'potential') { label = '隱藏潛能'; targetDb = db.potentials; }
+            else if(type === 'developed_potential') { label = '已開發潛能'; targetDb = db.developedPotentials; }
+
+            let name = prompt(`請輸入新${label}名稱：`);
+            if(name && name.trim() !== "") {
+                let id = type + '_' + Date.now();
+                targetDb[id] = { name: name.trim(), pts: 0 };
+                addLog(`新增${label}：【${name}】`);
+                save(); updateUI(); showFX("已新增");
+            }
+        }
+
+        window.deleteItem = function(type, id) {
+            let label = '技能';
+            let targetDb = db.customSkills;
+            
+            if(type === 'talent') { label = '天賦'; targetDb = db.talents; }
+            else if(type === 'personality') { label = '個性'; targetDb = db.personalities; }
+            else if(type === 'potential') { label = '隱藏潛能'; targetDb = db.potentials; }
+            else if(type === 'developed_potential') { label = '已開發潛能'; targetDb = db.developedPotentials; }
+
+            if(confirm(`確認刪除${label}【${targetDb[id].name}】？`)) {
+                delete targetDb[id];
+                save(); updateUI();
+            }
+        }
+
+        window.executeAction = function(actionId) {
+            let act = db.customActions[actionId];
+            if(!act) return;
+
+            let targetName = ""; let targetPts = 0;
+
+            if (act.targetType === 'skill') {
+                if(!db.customSkills[act.targetId]) return alert("目標技能已不存在");
+                db.customSkills[act.targetId].pts += act.val;
+                db.customSkills[act.targetId].pts = parseFloat(db.customSkills[act.targetId].pts.toFixed(1));
+                if(db.customSkills[act.targetId].pts > 100) db.customSkills[act.targetId].pts = 100;
+                targetName = db.customSkills[act.targetId].name; targetPts = db.customSkills[act.targetId].pts;
+            }
+
+            db.player.exp += Math.floor(act.val * 10);
+            if(db.player.exp >= EXP_REQ) {
+                db.player.exp -= EXP_REQ;
+                db.player.lv += 1;
+                showFX("RANK UP!");
+            }
+
+            addLog(`[行動] ${act.name}：${targetName} +${act.val}`);
+            save(); updateUI();
+        }
+
+        function save() { 
+            set(dbPath, db).catch((error) => { console.error(error); showFX("錯誤"); }); 
+        }
+
+        function getTier(lv) {
+            if(lv <= 5) return "初心者"; if(lv <= 15) return "熟練者"; if(lv <= 30) return "專家"; return "大師";
+        }
+
+        function updateUI() {
+            if(db.player.avatar) document.getElementById('ui-avatar').src = db.player.avatar;
+            document.getElementById('p-job').innerText = db.player.job;
+            document.getElementById('p-lv').innerText = db.player.lv;
+            document.getElementById('p-tier').innerText = `(${getTier(db.player.lv)})`;
+            document.getElementById('p-exp').style.width = (db.player.exp / EXP_REQ * 100) + '%';
+            document.getElementById('v-cash').innerText = db.player.cash;
+
+            document.getElementById('v-hp').innerText = db.res.hp;
+            document.getElementById('v-maxhp').innerText = 5;
+            document.getElementById('v-mp').innerText = db.res.mp;
+            document.getElementById('v-maxmp').innerText = 5;
+
+            let hpSegments = '';
+            for(let i=0; i<5; i++) {
+                hpSegments += `<div class="seg-block ${i < db.res.hp ? 'seg-hp filled' : ''}"></div>`;
+            }
+            document.getElementById('seg-hp-container').innerHTML = hpSegments;
+
+            let mpSegments = '';
+            for(let i=0; i<5; i++) {
+                mpSegments += `<div class="seg-block ${i < db.res.mp ? 'seg-mp filled' : ''}"></div>`;
+            }
+            document.getElementById('seg-mp-container').innerHTML = mpSegments;
+
+            let qHtml = '';
+            for(let key in qNames) {
+                let val = db.qualities[key] || 0;
+                qHtml += `
+                <div class="quality-row">
+                    <span class="quality-name">${qNames[key]}</span>
+                    <div class="bar-bg" style="margin:0 10px; flex:1; height:6px;"><div class="bar-fill" style="background-color:#FBBF24; width:${val*10}%"></div></div>
+                    <div class="quality-controls">
+                        <button class="q-btn" onclick="window.changeQuality('${key}', -1)">-</button>
+                        <span class="q-val">${val}</span>
+                        <button class="q-btn" onclick="window.changeQuality('${key}', 1)">+</button>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('qualities-container').innerHTML = qHtml;
+
+            let persHtml = '';
+            for(let id in db.personalities) {
+                persHtml += `<div class="item-tag">${db.personalities[id].name} <button class="del-tag-btn" onclick="window.deleteItem('personality', '${id}')">✖</button></div>`;
+            }
+            document.getElementById('personality-container').innerHTML = persHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
+            let talentHtml = '';
+            for(let id in db.talents) {
+                talentHtml += `<div class="item-tag" style="border: 1px solid #10B981; color: #10B981; background: rgba(16, 185, 129, 0.1);">${db.talents[id].name} <button class="del-tag-btn" onclick="window.deleteItem('talent', '${id}')">✖</button></div>`;
+            }
+            document.getElementById('talents-container').innerHTML = talentHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
+            let potentialHtml = '';
+            for(let id in db.potentials) {
+                potentialHtml += `<div class="item-tag" style="border: 1px solid #8B5CF6; color: #8B5CF6; background: rgba(139, 92, 246, 0.1);">${db.potentials[id].name} <button class="del-tag-btn" onclick="window.deleteItem('potential', '${id}')">✖</button></div>`;
+            }
+            document.getElementById('potentials-container').innerHTML = potentialHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
+            let devPotentialHtml = '';
+            for(let id in db.developedPotentials) {
+                devPotentialHtml += `<div class="item-tag" style="border: 1px solid #F59E0B; color: #F59E0B; background: rgba(245, 158, 11, 0.1);">${db.developedPotentials[id].name} <button class="del-tag-btn" onclick="window.deleteItem('developed_potential', '${id}')">✖</button></div>`;
+            }
+            document.getElementById('developed-potentials-container').innerHTML = devPotentialHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
+            let skillHtml = '';
+            for(let id in db.customSkills) {
+                let s = db.customSkills[id];
+                skillHtml += `
+                <div style="margin-bottom: 12px;">
+                    <div class="custom-item-header"><span class="skill-name">${s.name}</span>
+                    <button class="cs-btn" onclick="window.deleteItem('skill', '${id}')">刪除</button></div>
+                    <div class="bar-bg" style="margin-top:6px; height: 6px;"><div class="bar-fill bar-exp" style="width: ${s.pts}%"></div></div>
+                    <div style="font-size:11px; text-align:right; color:#9CA3AF; font-family: monospace;">${s.pts} / 100</div>
+                </div>`;
+            }
+            document.getElementById('skills-container').innerHTML = skillHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
+            let actHtml = '';
+            for(let id in db.customActions) {
+                let act = db.customActions[id];
+                let targetLabel = "";
+                if(act.targetType === 'skill' && db.customSkills[act.targetId]) targetLabel = db.customSkills[act.targetId].name;
+                
+                actHtml += `
+                <button class="action-btn" onclick="window.executeAction('${id}')">
+                    <span style="font-size:14px; font-weight:600; color:#F3F4F6;">${act.name}</span>
+                    <span class="action-val">${targetLabel} +${act.val}</span>
+                    <button class="del-act-btn" onclick="window.deleteAction('${id}', '${act.name}', event)">✖</button>
+                </button>`;
+            }
+            document.getElementById('actions-container').innerHTML = actHtml || '<div style="color:#6B7280; font-size:12px; grid-column: span 2;">點擊右上角新增動作</div>';
+
+            let logHtml = '';
+            db.logs.forEach(l => { logHtml += `<div>${l}</div>`; });
+            document.getElementById('sys-log').innerHTML = logHtml;
+        }
+
+        function addLog(msg) {
+            let time = new Date().toLocaleTimeString('en-GB', {hour12: false});
+            db.logs.unshift(`[${time}] ${msg}`);
+            if(db.logs.length > 15) db.logs.pop();
+        }
+
+        function showFX(text) {
+            let n = document.getElementById('notification');
+            n.innerText = text; n.style.display = 'block';
+            setTimeout(() => { n.style.display = 'none'; }, 2000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
