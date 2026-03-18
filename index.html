@@ -43,7 +43,7 @@
     .q-btn:active { background: #4B5563; }
     .q-val { font-size: 14px; color: #F3F4F6; font-weight: bold; width: 24px; text-align: center; font-family: monospace; }
 
-    /* 標籤 (天賦/個性) */
+    /* 標籤 (天賦/個性/隱藏潛能) */
     .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .item-tag { background-color: #374151; color: #E5E7EB; padding: 6px 12px; border-radius: 9999px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
     .del-tag-btn { background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 12px; padding: 0; display: flex; align-items: center; }
@@ -154,6 +154,11 @@
         <h2>TALENTS (天賦) <button class="edit-btn" onclick="window.promptAddItem('talent')">+ 新增</button></h2>
         <div class="tag-container" id="talents-container"></div>
     </div>
+    
+    <div class="panel">
+        <h2>HIDDEN POTENTIAL (隱藏潛能) <button class="edit-btn" onclick="window.promptAddItem('potential')">+ 新增</button></h2>
+        <div class="tag-container" id="potentials-container"></div>
+    </div>
 
     <div class="panel">
         <h2>CORE QUALITIES (7大素質)</h2>
@@ -201,6 +206,7 @@
             qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
             talents: {},
             personalities: {},
+            potentials: {},
             customSkills: {},
             customActions: {},
             logs: ["系統連線中..."]
@@ -214,11 +220,11 @@
                     if(!cloudData.qualities) cloudData.qualities = { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 };
                     if(!cloudData.talents) cloudData.talents = {};
                     if(!cloudData.personalities) cloudData.personalities = {};
+                    if(!cloudData.potentials) cloudData.potentials = {};
                     if(!cloudData.customSkills) cloudData.customSkills = {};
                     if(!cloudData.customActions) cloudData.customActions = {};
                     if(!cloudData.res) cloudData.res = { hp: 5, mp: 5 };
                     
-                    // 自動修正舊存檔數值大於 5 的情況
                     if(cloudData.res.hp > 5) cloudData.res.hp = 5;
                     if(cloudData.res.mp > 5) cloudData.res.mp = 5;
 
@@ -333,11 +339,11 @@
         }
 
         window.promptAddItem = function(type) {
-            let label = type === 'talent' ? '天賦' : (type === 'personality' ? '個性' : '技能');
+            let label = type === 'talent' ? '天賦' : (type === 'personality' ? '個性' : (type === 'potential' ? '隱藏潛能' : '技能'));
             let name = prompt(`請輸入新${label}名稱：`);
             if(name && name.trim() !== "") {
                 let id = type + '_' + Date.now();
-                let targetDb = type === 'talent' ? db.talents : (type === 'personality' ? db.personalities : db.customSkills);
+                let targetDb = type === 'talent' ? db.talents : (type === 'personality' ? db.personalities : (type === 'potential' ? db.potentials : db.customSkills));
                 targetDb[id] = { name: name.trim(), pts: 0 };
                 addLog(`新增${label}：【${name}】`);
                 save(); updateUI(); showFX("已新增");
@@ -345,8 +351,8 @@
         }
 
         window.deleteItem = function(type, id) {
-            let label = type === 'talent' ? '天賦' : (type === 'personality' ? '個性' : '技能');
-            let targetDb = type === 'talent' ? db.talents : (type === 'personality' ? db.personalities : db.customSkills);
+            let label = type === 'talent' ? '天賦' : (type === 'personality' ? '個性' : (type === 'potential' ? '隱藏潛能' : '技能'));
+            let targetDb = type === 'talent' ? db.talents : (type === 'personality' ? db.personalities : (type === 'potential' ? db.potentials : db.customSkills));
             if(confirm(`確認刪除${label}【${targetDb[id].name}】？`)) {
                 delete targetDb[id];
                 save(); updateUI();
@@ -399,14 +405,12 @@
             document.getElementById('v-mp').innerText = db.res.mp;
             document.getElementById('v-maxmp').innerText = 5;
 
-            // 渲染 HP 5格進度條
             let hpSegments = '';
             for(let i=0; i<5; i++) {
                 hpSegments += `<div class="seg-block ${i < db.res.hp ? 'seg-hp filled' : ''}"></div>`;
             }
             document.getElementById('seg-hp-container').innerHTML = hpSegments;
 
-            // 渲染 MP 5格進度條
             let mpSegments = '';
             for(let i=0; i<5; i++) {
                 mpSegments += `<div class="seg-block ${i < db.res.mp ? 'seg-mp filled' : ''}"></div>`;
@@ -429,21 +433,24 @@
             }
             document.getElementById('qualities-container').innerHTML = qHtml;
 
-            // 渲染個性 (標籤)
             let persHtml = '';
             for(let id in db.personalities) {
                 persHtml += `<div class="item-tag">${db.personalities[id].name} <button class="del-tag-btn" onclick="window.deleteItem('personality', '${id}')">✖</button></div>`;
             }
             document.getElementById('personality-container').innerHTML = persHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
 
-            // 渲染天賦 (標籤)
             let talentHtml = '';
             for(let id in db.talents) {
                 talentHtml += `<div class="item-tag" style="border: 1px solid #10B981; color: #10B981; background: rgba(16, 185, 129, 0.1);">${db.talents[id].name} <button class="del-tag-btn" onclick="window.deleteItem('talent', '${id}')">✖</button></div>`;
             }
             document.getElementById('talents-container').innerHTML = talentHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
 
-            // 渲染技能 (進度條)
+            let potentialHtml = '';
+            for(let id in db.potentials) {
+                potentialHtml += `<div class="item-tag" style="border: 1px solid #8B5CF6; color: #8B5CF6; background: rgba(139, 92, 246, 0.1);">${db.potentials[id].name} <button class="del-tag-btn" onclick="window.deleteItem('potential', '${id}')">✖</button></div>`;
+            }
+            document.getElementById('potentials-container').innerHTML = potentialHtml || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
             let skillHtml = '';
             for(let id in db.customSkills) {
                 let s = db.customSkills[id];
