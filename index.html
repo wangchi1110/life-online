@@ -1,48 +1,397 @@
-/* 修改這部分的 CSS */
-.quality-row { 
-    display: block; /* 改為上下結構，視覺更集中 */
-    background-color: #1a202c; 
-    padding: 12px 16px; 
-    margin-bottom: 12px; 
-    border-radius: 12px; 
-    border: 1px solid #2d3748;
-}
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>人生Online</title>
+<style>
+    /* 質感深色主題 (Elegant Dark Mode) */
+    body { background-color: #111827; color: #D1D5DB; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 15px; margin: 0; font-size: 14px; line-height: 1.5; }
+    .panel { background-color: #1F2937; border: 1px solid #374151; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); position: relative; }
+    h2 { color: #9CA3AF; font-size: 13px; margin-top: 0; border-bottom: 1px solid #374151; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1.5px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+    
+    .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
+    .highlight-text { color: #F3F4F6; font-weight: 600; }
+    
+    .bar-bg { background-color: #374151; height: 8px; width: 100%; margin: 6px 0 12px 0; border-radius: 9999px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 0%; transition: width 0.4s ease; }
 
-.quality-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    align-items: center;
-}
+    /* 5格分段式進度條 (體力、精力、心境使用) */
+    .segmented-bar-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .seg-label { font-size: 11px; color: #9CA3AF; width: 28px; text-align: center; }
+    .segmented-bar { display: flex; gap: 4px; height: 10px; flex: 1; }
+    .seg-block { flex: 1; border-radius: 2px; background-color: #374151; transition: background-color 0.3s, box-shadow 0.3s; }
+    
+    .seg-hp.filled { background-color: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
+    .seg-mp.filled { background-color: #3B82F6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.4); }
+    .seg-mood-blue.filled { background-color: #7DD3FC; box-shadow: 0 0 6px rgba(125, 211, 252, 0.4); }
+    .seg-mood-grey.filled { background-color: #9CA3AF; box-shadow: 0 0 6px rgba(156, 163, 175, 0.4); }
+    .seg-mood-red.filled { background-color: #800020; box-shadow: 0 0 6px rgba(128, 0, 32, 0.6); }
 
-.quality-name { 
-    font-size: 14px; 
-    color: #e2e8f0; 
-    font-weight: 600;
-}
+    /* 核心素質優化 UI */
+    .quality-row { background-color: #111827; padding: 12px 14px; margin-bottom: 12px; border-radius: 12px; border: 1px solid #374151; }
+    .quality-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .quality-name { font-size: 14px; color: #E5E7EB; font-weight: 600; }
+    .q-bar-container { background-color: #374151; height: 12px; border-radius: 999px; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+    .q-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s; }
 
-.quality-controls { 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
-}
+    /* 頭像與按鈕 */
+    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .avatar-wrapper { position: relative; }
+    .avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #4B5563; background-color: #374151; }
+    .avatar-upload-btn { position: absolute; bottom: 0; right: 0; background: #10B981; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 20px; cursor: pointer; font-size: 16px; font-weight: bold; border: 2px solid #1F2937; }
 
-/* 進度條容器 */
-.q-bar-container {
-    background-color: #2d3748;
-    height: 12px;
-    border-radius: 999px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-}
+    .res-controls { display: flex; gap: 4px; }
+    .res-btn { background: #374151; border: none; color: #D1D5DB; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+    .res-btn:active { background: #4B5563; }
+    .q-btn { background: #1F2937; color: #F3F4F6; border: 1px solid #374151; border-radius: 4px; width: 24px; height: 24px; font-weight: bold; cursor: pointer; }
+    .q-val { font-size: 14px; color: #F3F4F6; font-weight: bold; width: 28px; text-align: center; font-family: monospace; }
 
-/* 進度條填充填充 */
-.q-bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 0.3s ease, background-color 0.3s ease;
-    /* 漸變色效果 */
-    background: linear-gradient(90deg, #f6e05e 0%, #ecc94b 100%);
-    box-shadow: 0 0 10px rgba(236, 201, 75, 0.4);
-}
+    .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .item-tag { background-color: #374151; color: #E5E7EB; padding: 6px 12px; border-radius: 9999px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .del-tag-btn { background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 12px; padding: 0; }
+
+    .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .split-col h2 { font-size: 11px; letter-spacing: 0; }
+
+    .skill-section { margin-top: 12px; }
+    .custom-item-header { display: flex; justify-content: space-between; align-items: center; margin-top: 8px;}
+    .skill-name { color: #E5E7EB; font-size: 13px; font-weight: 600; }
+    .cs-btn { background: transparent; border: 1px solid #EF4444; color: #EF4444; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .action-btn { background-color: #374151; color: #F3F4F6; border: 1px solid transparent; padding: 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; position: relative;}
+    .action-val { font-size: 11px; color: #9CA3AF; }
+    .del-act-btn { position: absolute; top: 4px; right: 4px; background: transparent; border: none; color: #EF4444; font-size: 12px; cursor: pointer; padding: 4px; }
+    
+    .edit-btn { background-color: #374151; color: #D1D5DB; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; }
+    .log-box { font-size: 11px; color: #9CA3AF; height: 100px; overflow-y: auto; background-color: #111827; padding: 10px; border-radius: 8px; font-family: monospace; }
+    
+    #notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #10B981; color: #FFF; padding: 12px 24px; border-radius: 8px; font-weight: bold; display: none; z-index: 100; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; }
+    .modal-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1F2937; border: 1px solid #374151; padding: 24px; width: 85%; max-width: 320px; border-radius: 12px; }
+    .modal-box input, .modal-box select { width: 100%; box-sizing: border-box; background: #111827; border: 1px solid #374151; color: #F3F4F6; padding: 10px; margin-top: 6px; margin-bottom: 16px; border-radius: 6px; }
+</style>
+</head>
+<body>
+    <div id="notification">系統更新</div>
+
+    <div id="modal-config" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="border:none; margin-bottom: 10px;">系統參數設定</h2>
+            <label>玩家名字：</label>
+            <input type="text" id="input-name" placeholder="輸入你的名字">
+            <label>職業/身分：</label>
+            <input type="text" id="input-job" placeholder="例如：商人、工程師">
+            <label>流動資產 (HKD)：</label>
+            <input type="number" id="input-cash" placeholder="輸入數字">
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn" style="flex: 1; background: #10B981; color: #FFF;" onclick="window.saveConfig()">儲存</button>
+                <button class="action-btn" style="flex: 1; border: 1px solid #EF4444; color: #EF4444;" onclick="window.closeModal('modal-config')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-action" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="border:none; margin-bottom: 10px;">新增自訂動作</h2>
+            <label>按鈕名稱：</label>
+            <input type="text" id="act-name" placeholder="例如：冥想、寫程式">
+            <label>對應提升目標 (技能)：</label>
+            <select id="act-target"></select>
+            <label>每次提升數值 (建議 1 至 15)：</label>
+            <input type="number" id="act-val" step="0.1" value="10">
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn" style="flex: 1; background: #3B82F6; color: #FFF;" onclick="window.saveCustomAction()">新增</button>
+                <button class="action-btn" style="flex: 1; border: 1px solid #EF4444; color: #EF4444;" onclick="window.closeModal('modal-action')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="avatar-container">
+            <div class="avatar-wrapper">
+                <img id="ui-avatar" class="avatar-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzlDQTNBRiI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTQuMmMtMi41IDAtNC43MS0xLjI4LTYtMy4yMi4wMy0xLjk5IDQtMy4wOCA2LTMuMDhzNS45NyAxLjA5IDYgMy4wOGMtMS4yOSAxLjk0LTMuNSAzLjIyLTYgMy4yMnoiLz48L3N2Zz4=">
+                <label for="avatar-upload" class="avatar-upload-btn">+</label>
+                <input type="file" id="avatar-upload" accept="image/*" style="display: none;" onchange="window.handleAvatarUpload(event)">
+            </div>
+            <div style="flex: 1;">
+                <div class="status-row" style="margin-bottom: 2px;"><span id="p-name" class="highlight-text" style="font-size: 18px;">載入中...</span></div>
+                <div class="status-row" style="margin-bottom: 0;"><span style="font-size: 11px; color: #9CA3AF;">職業：<span id="p-job" class="highlight-text" style="font-size: 11px;">載入中...</span></span></div>
+            </div>
+            <button class="edit-btn" onclick="window.openModal('modal-config')">設定</button>
+        </div>
+        
+        <div class="status-row" style="margin-top: 16px;"><span>體力: <span id="v-hp" class="highlight-text">5</span>/5</span>
+            <div class="res-controls">
+                <button class="res-btn" onclick="window.adjRes('hp', -1)">-1</button>
+                <button class="res-btn" onclick="window.adjRes('hp', 1)">+1</button>
+                <button class="res-btn" onclick="window.adjRes('hp', 5)">滿</button>
+            </div>
+        </div>
+        <div class="segmented-bar-wrapper"><span class="seg-label" style="text-align: right;">低</span><div class="segmented-bar" id="seg-hp-container"></div><span class="seg-label" style="text-align: left;">高</span></div>
+
+        <div class="status-row"><span>精力: <span id="v-mp" class="highlight-text">5</span>/5</span>
+            <div class="res-controls">
+                <button class="res-btn" onclick="window.adjRes('mp', -1)">-1</button>
+                <button class="res-btn" onclick="window.adjRes('mp', 1)">+1</button>
+                <button class="res-btn" onclick="window.adjRes('mp', 5)">滿</button>
+            </div>
+        </div>
+        <div class="segmented-bar-wrapper"><span class="seg-label" style="text-align: right;">低</span><div class="segmented-bar" id="seg-mp-container"></div><span class="seg-label" style="text-align: left;">高</span></div>
+
+        <div class="status-row"><span>心境: <span id="v-mood" class="highlight-text">0</span></span>
+            <div class="res-controls">
+                <button class="res-btn" onclick="window.adjRes('mood', -1)">-1</button>
+                <button class="res-btn" onclick="window.adjRes('mood', 1)">+1</button>
+                <button class="res-btn" onclick="window.setMood(0)">歸零</button>
+            </div>
+        </div>
+        <div class="segmented-bar-wrapper"><span class="seg-label" style="text-align: right;">心煩</span><div class="segmented-bar" id="seg-mood-container"></div><span class="seg-label" style="text-align: left;">平靜</span></div>
+
+        <div class="status-row" style="margin-top: 12px;"><span>CASH: <span class="highlight-text">HKD <span id="v-cash">0</span></span></span></div>
+    </div>
+
+    <div class="panel">
+        <h2>PERSONALITY (個性) <button class="edit-btn" onclick="window.promptAddItem('personality')">+ 新增</button></h2>
+        <div class="tag-container" id="personality-container"></div>
+    </div>
+
+    <div class="panel" style="padding: 12px 16px;">
+        <div class="split-grid">
+            <div class="split-col">
+                <h2>隱藏潛能 <button class="edit-btn" onclick="window.promptAddItem('potential')">+</button></h2>
+                <div class="tag-container" id="potentials-container"></div>
+            </div>
+            <div class="split-col">
+                <h2>已開發潛能 <button class="edit-btn" onclick="window.promptAddItem('developed_potential')">+</button></h2>
+                <div class="tag-container" id="developed-potentials-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>TALENTS (天賦) <button class="edit-btn" onclick="window.promptAddItem('talent')">+ 新增</button></h2>
+        <div class="tag-container" id="talents-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>CORE QUALITIES (7大素質)</h2>
+        <div id="qualities-container" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="panel">
+        <h2>SKILLS (技能) <button class="edit-btn" onclick="window.promptAddItem('skill')">+ 新增</button></h2>
+        <div class="skill-section" id="skills-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>ACTION CONSOLE <button class="edit-btn" onclick="window.openActionModal()">+ 自訂動作</button></h2>
+        <div class="btn-grid" id="actions-container"></div>
+    </div>
+
+    <div class="panel">
+        <h2>SYSTEM LOG</h2>
+        <div class="log-box" id="sys-log"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgwyo2bWYjFAuX4zPg1LNpgbGQqDDOmnI",
+            authDomain: "life-online-dac47.firebaseapp.com",
+            projectId: "life-online-dac47",
+            storageBucket: "life-online-dac47.firebasestorage.app",
+            messagingSenderId: "1007736463039",
+            appId: "1:1007736463039:web:64fb96caa559a3c7bb300a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const dbPath = ref(database, 'saveData/mainProfile');
+        const qNames = { action: '行動力', willpower: '意志力', learning: '學習力', thinking: '思考力', emotion: '情緒控制力', communication: '溝通能力', insight: '洞察力' };
+        
+        let db = {
+            player: { name: '未設定', cash: 0, job: '商人', avatar: '' },
+            res: { hp: 5, mp: 5, mood: 0 },
+            qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
+            talents: {}, personalities: {}, potentials: {}, developedPotentials: {},
+            customSkills: {}, customActions: {}, logs: ["系統啟動中..."]
+        };
+
+        async function init() {
+            try {
+                const snapshot = await get(dbPath);
+                if (snapshot.exists()) {
+                    let cloudData = snapshot.val();
+                    if(!cloudData.player) cloudData.player = { name: '未設定', cash: 0, job: '商人', avatar: '' };
+                    if(!cloudData.res) cloudData.res = { hp: 5, mp: 5, mood: 0 };
+                    if(!cloudData.qualities) cloudData.qualities = { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 };
+                    db = Object.assign(db, cloudData);
+                    addLog("已載入雲端存檔。");
+                } else { addLog("建立新存檔。"); save(); }
+                updateUI();
+            } catch (error) { addLog("資料庫錯誤。"); updateUI(); }
+        }
+
+        window.handleAvatarUpload = function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX = 150; let w = img.width, h = img.height;
+                    if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } } else { if(h > MAX) { w *= MAX/h; h = MAX; } }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    db.player.avatar = canvas.toDataURL('image/jpeg', 0.8);
+                    save(); updateUI();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.adjRes = function(type, val) {
+            if(type === 'hp' || type === 'mp') {
+                db.res[type] = Math.min(5, Math.max(0, db.res[type] + val));
+            } else {
+                db.res.mood = Math.min(2, Math.max(-2, db.res.mood + val));
+            }
+            save(); updateUI();
+        };
+
+        window.setMood = function(v) { db.res.mood = v; save(); updateUI(); };
+        window.openModal = function(id) {
+            if(id === 'modal-config') {
+                document.getElementById('input-name').value = db.player.name;
+                document.getElementById('input-job').value = db.player.job;
+                document.getElementById('input-cash').value = db.player.cash;
+            }
+            document.getElementById(id).style.display = 'block';
+        };
+        window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; };
+        window.saveConfig = function() {
+            db.player.name = document.getElementById('input-name').value || '未設定';
+            db.player.job = document.getElementById('input-job').value || '商人';
+            db.player.cash = parseInt(document.getElementById('input-cash').value) || 0;
+            save(); updateUI(); closeModal('modal-config');
+        };
+
+        window.changeQuality = function(key, delta) {
+            db.qualities[key] = Math.min(10, Math.max(0, (db.qualities[key] || 0) + delta));
+            save(); updateUI();
+        };
+
+        window.promptAddItem = function(type) {
+            let label = {talent:'天賦', personality:'個性', potential:'隱藏潛能', developed_potential:'已開發潛能', skill:'技能'}[type];
+            let name = prompt(`輸入新${label}：`);
+            if(name) {
+                let id = type + '_' + Date.now();
+                let target = {talent:db.talents, personality:db.personalities, potential:db.potentials, developed_potential:db.developedPotentials, skill:db.customSkills}[type];
+                target[id] = { name: name.trim(), pts: 0 };
+                save(); updateUI();
+            }
+        };
+
+        window.deleteItem = function(type, id) {
+            let target = {talent:db.talents, personality:db.personalities, potential:db.potentials, developed_potential:db.developedPotentials, skill:db.customSkills}[type];
+            if(confirm('確認刪除？')) { delete target[id]; save(); updateUI(); }
+        };
+
+        window.openActionModal = function() {
+            let select = document.getElementById('act-target');
+            let options = '';
+            for(let id in db.customSkills) { options += `<option value="skill_${id}">技能: ${db.customSkills[id].name}</option>`; }
+            select.innerHTML = options || '<option>請先新增技能</option>';
+            document.getElementById('act-name').value = '';
+            document.getElementById('modal-action').style.display = 'block';
+        };
+
+        window.saveCustomAction = function() {
+            let name = document.getElementById('act-name').value.trim();
+            let targetRaw = document.getElementById('act-target').value;
+            let val = parseFloat(document.getElementById('act-val').value);
+            if(!name || !targetRaw || isNaN(val)) return;
+            let id = 'act_' + Date.now();
+            db.customActions[id] = { name, targetId: targetRaw.split('_')[1], val };
+            save(); updateUI(); closeModal('modal-action');
+        };
+
+        window.executeAction = function(id) {
+            let act = db.customActions[id];
+            if(!act || !db.customSkills[act.targetId]) return;
+            db.customSkills[act.targetId].pts = Math.min(100, db.customSkills[act.targetId].pts + act.val);
+            addLog(`執行: ${act.name}`); save(); updateUI();
+        };
+
+        window.deleteAction = function(id, name, e) { e.stopPropagation(); if(confirm(`刪除 ${name}？`)) { delete db.customActions[id]; save(); updateUI(); } };
+
+        function save() { set(dbPath, db).catch(() => addLog("存檔失敗")); }
+        function addLog(m) { let t = new Date().toLocaleTimeString('en-GB'); db.logs.unshift(`[${t}] ${m}`); if(db.logs.length > 15) db.logs.pop(); updateLog(); }
+        function updateLog() { let el = document.getElementById('sys-log'); if(el) el.innerHTML = db.logs.map(l => `<div>${l}</div>`).join(''); }
+
+        function updateUI() {
+            if(db.player.avatar) document.getElementById('ui-avatar').src = db.player.avatar;
+            document.getElementById('p-name').innerText = db.player.name;
+            document.getElementById('p-job').innerText = db.player.job;
+            document.getElementById('v-cash').innerText = db.player.cash;
+            document.getElementById('v-hp').innerText = db.res.hp;
+            document.getElementById('v-mp').innerText = db.res.mp;
+            document.getElementById('v-mood').innerText = db.res.mood > 0 ? '+' + db.res.mood : db.res.mood;
+
+            let renderBar = (id, cur, max, cls) => {
+                let h = ''; for(let i=0; i<max; i++) h += `<div class="seg-block ${i < cur ? cls + ' filled' : ''}"></div>`;
+                document.getElementById(id).innerHTML = h;
+            };
+            renderBar('seg-hp-container', db.res.hp, 5, 'seg-hp');
+            renderBar('seg-mp-container', db.res.mp, 5, 'seg-mp');
+            
+            let moodIdx = db.res.mood + 2, moodCls = db.res.mood < 0 ? 'seg-mood-red' : (db.res.mood > 0 ? 'seg-mood-blue' : 'seg-mood-grey');
+            let mH = ''; for(let i=0; i<5; i++) mH += `<div class="seg-block ${i === moodIdx ? moodCls + ' filled' : ''}"></div>`;
+            document.getElementById('seg-mood-container').innerHTML = mH;
+
+            // 渲染 7 大素質 (優化版)
+            let qHtml = '';
+            for(let k in qNames) {
+                let v = db.qualities[k] || 0;
+                let col = v > 7 ? '#10B981' : (v > 4 ? '#FBBF24' : '#EF4444');
+                qHtml += `<div class="quality-row"><div class="quality-header"><span class="quality-name">${qNames[k]}</span><div class="quality-controls"><button class="q-btn" onclick="window.changeQuality('${k}',-1)">-</button><span class="q-val">${v}</span><button class="q-btn" onclick="window.changeQuality('${k}',1)">+</button></div></div><div class="q-bar-container"><div class="q-bar-fill" style="width:${v*10}%; background-color:${col}; box-shadow: 0 0 10px ${col}66;"></div></div></div>`;
+            }
+            document.getElementById('qualities-container').innerHTML = qHtml;
+
+            let renderTags = (id, data, type, style='') => {
+                let h = ''; for(let i in data) h += `<div class="item-tag" style="${style}">${data[i].name} <button class="del-tag-btn" onclick="window.deleteItem('${type}','${i}')">✖</button></div>`;
+                document.getElementById(id).innerHTML = h || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+            };
+            renderTags('personality-container', db.personalities, 'personality');
+            renderTags('potentials-container', db.potentials, 'potential', 'border:1px solid #8B5CF6; color:#8B5CF6; background:rgba(139,92,246,0.1)');
+            renderTags('developed-potentials-container', db.developedPotentials, 'developed_potential', 'border:1px solid #F59E0B; color:#F59E0B; background:rgba(245,158,11,0.1)');
+            renderTags('talents-container', db.talents, 'talent', 'border:1px solid #10B981; color:#10B981; background:rgba(16,185,129,0.1)');
+
+            let sH = '';
+            for(let i in db.customSkills) {
+                let s = db.customSkills[i];
+                sH += `<div style="margin-bottom:12px;"><div class="custom-item-header"><span class="skill-name">${s.name}</span><button class="cs-btn" onclick="window.deleteItem('skill','${i}')">刪除</button></div><div class="bar-bg" style="margin-top:6px;height:6px;"><div class="bar-fill" style="width:${s.pts}%; background-color:#10B981"></div></div><div style="font-size:11px; text-align:right; color:#9CA3AF;">${s.pts.toFixed(1)} / 100</div></div>`;
+            }
+            document.getElementById('skills-container').innerHTML = sH || '<div style="color:#6B7280; font-size:12px;">尚無資料</div>';
+
+            let aH = '';
+            for(let i in db.customActions) {
+                let a = db.customActions[i];
+                aH += `<button class="action-btn" onclick="window.executeAction('${i}')"><span style="font-weight:600;">${a.name}</span><span class="action-val">${db.customSkills[a.targetId]?.name || ''} +${a.val}</span><button class="del-act-btn" onclick="window.deleteAction('${i}','${a.name}',event)">✖</button></button>`;
+            }
+            document.getElementById('actions-container').innerHTML = aH || '<div style="color:#6B7280; font-size:12px; grid-column: span 2;">請新增動作</div>';
+            updateLog();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
