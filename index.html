@@ -18,7 +18,7 @@
 
     /* 5格分段式進度條 (Segmented Bar) */
     .segmented-bar-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-    .seg-label { font-size: 11px; color: #9CA3AF; width: 24px; text-align: center; }
+    .seg-label { font-size: 11px; color: #9CA3AF; width: 28px; text-align: center; }
     .segmented-bar { display: flex; gap: 4px; height: 10px; flex: 1; }
     .seg-block { flex: 1; border-radius: 2px; background-color: #374151; transition: background-color 0.3s, box-shadow 0.3s; }
     
@@ -30,7 +30,7 @@
     .seg-mood-red.filled { background-color: #800020; box-shadow: 0 0 6px rgba(128, 0, 32, 0.6); }
 
     /* 頭像區域 */
-    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
     .avatar-wrapper { position: relative; }
     .avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #4B5563; background-color: #374151; }
     .avatar-upload-btn { position: absolute; bottom: 0; right: 0; background: #10B981; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 20px; cursor: pointer; font-size: 16px; font-weight: bold; border: 2px solid #1F2937; }
@@ -136,7 +136,7 @@
         </div>
         
         <div class="status-row" style="margin-top: 16px;">
-            <span>體力: <span id="v-hp" class="highlight-text">5</span>/<span id="v-maxhp">5</span></span>
+            <span>體力: <span id="v-hp" class="highlight-text">5</span>/5</span>
             <div class="res-controls">
                 <button class="res-btn" onclick="window.adjRes('hp', -1)">-1</button>
                 <button class="res-btn" onclick="window.adjRes('hp', 1)">+1</button>
@@ -150,7 +150,7 @@
         </div>
 
         <div class="status-row">
-            <span>精力: <span id="v-mp" class="highlight-text">5</span>/<span id="v-maxmp">5</span></span>
+            <span>精力: <span id="v-mp" class="highlight-text">5</span>/5</span>
             <div class="res-controls">
                 <button class="res-btn" onclick="window.adjRes('mp', -1)">-1</button>
                 <button class="res-btn" onclick="window.adjRes('mp', 1)">+1</button>
@@ -227,14 +227,10 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // 全局錯誤捕捉，顯示在畫面上，方便手機 Debug
+        // 全局錯誤捕捉
         window.addEventListener('error', function(e) {
             let log = document.getElementById('sys-log');
-            if(log) log.innerHTML = `<div style="color:#EF4444">[系統崩潰] ${e.message}</div>` + log.innerHTML;
-        });
-        window.addEventListener('unhandledrejection', function(e) {
-            let log = document.getElementById('sys-log');
-            if(log) log.innerHTML = `<div style="color:#EF4444">[連線錯誤] 請檢查網絡</div>` + log.innerHTML;
+            if(log) log.innerHTML = `<div style="color:#EF4444">[系統錯誤] ${e.message}</div>` + log.innerHTML;
         });
 
         const firebaseConfig = {
@@ -267,7 +263,6 @@
                 if (snapshot.exists()) {
                     let cloudData = snapshot.val();
                     
-                    // 舊存檔安全修復機制
                     if(!cloudData) cloudData = {};
                     if(!cloudData.player) cloudData.player = { name: '未設定', cash: 0, job: '商人', avatar: '' };
                     if(cloudData.player.name === undefined) cloudData.player.name = '未設定';
@@ -278,7 +273,6 @@
                     if(typeof cloudData.res.mp !== 'number') cloudData.res.mp = 5;
                     if(typeof cloudData.res.mood !== 'number') cloudData.res.mood = 0;
                     
-                    // 數值上限修正
                     if(cloudData.res.hp > 5) cloudData.res.hp = 5;
                     if(cloudData.res.mp > 5) cloudData.res.mp = 5;
                     if(cloudData.res.mood > 2) cloudData.res.mood = 2;
@@ -300,7 +294,7 @@
                 }
                 updateUI();
             } catch (error) {
-                addLog("資料庫連線失敗: " + error.message);
+                addLog("連線失敗，請檢查網絡設定。");
                 updateUI();
             }
         }
@@ -327,7 +321,7 @@
                     img.src = e.target.result;
                 }
                 reader.readAsDataURL(file);
-            } catch(e) { addLog("圖片處理錯誤"); }
+            } catch(e) { addLog("圖片處理出錯"); }
         }
 
         window.adjRes = function(type, val) {
@@ -387,7 +381,7 @@
             let targetRaw = document.getElementById('act-target').value;
             let val = parseFloat(document.getElementById('act-val').value);
             
-            if(!name || !targetRaw || isNaN(val)) return alert("請填寫完整資訊 (如果冇選項，請先新增技能)");
+            if(!name || !targetRaw || isNaN(val)) return alert("請填寫完整資訊 (請確保已新增技能)");
             
             let parts = targetRaw.split('_');
             let type = parts[0];
@@ -465,7 +459,7 @@
         }
 
         function save() { 
-            set(dbPath, db).catch((error) => { addLog("儲存失敗"); showFX("錯誤"); }); 
+            set(dbPath, db).catch((error) => { addLog("資料上傳失敗"); showFX("錯誤"); }); 
         }
 
         function safeSet(id, text) {
@@ -484,9 +478,7 @@
                 safeSet('p-job', db.player.job);
                 safeSet('v-cash', db.player.cash);
                 safeSet('v-hp', db.res.hp);
-                safeSet('v-maxhp', 5);
                 safeSet('v-mp', db.res.mp);
-                safeSet('v-maxmp', 5);
                 
                 let moodText = db.res.mood > 0 ? '+' + db.res.mood : db.res.mood;
                 safeSet('v-mood', moodText);
@@ -501,7 +493,7 @@
                 let elMp = document.getElementById('seg-mp-container');
                 if(elMp) elMp.innerHTML = mpSegments;
 
-                // 心境邏輯：左邊(-2,-1)紅，中間(0)灰，右邊(1,2)藍
+                // 心境邏輯：左邊(-2,-1)紅，中間(0)灰，右邊(1,2)淺藍
                 let moodIndex = db.res.mood + 2; 
                 let moodClass = 'seg-mood-grey'; 
                 if (db.res.mood < 0) moodClass = 'seg-mood-red'; 
@@ -585,7 +577,7 @@
                 if(elLog) elLog.innerHTML = logHtml;
 
             } catch (error) {
-                addLog("UI更新錯誤: " + error.message);
+                addLog("介面更新失敗: " + error.message);
             }
         }
 
@@ -594,7 +586,6 @@
             db.logs.unshift(`[${time}] ${msg}`);
             if(db.logs.length > 15) db.logs.pop();
             
-            // 即時更新日誌
             let elLog = document.getElementById('sys-log');
             if(elLog) {
                 let logHtml = '';
