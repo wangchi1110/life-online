@@ -12,11 +12,9 @@
     
     .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
     .highlight-text { color: #F3F4F6; font-weight: 600; }
-    .tier-text { color: #FBBF24; font-weight: 600; }
     
     .bar-bg { background-color: #374151; height: 8px; width: 100%; margin: 6px 0 12px 0; border-radius: 9999px; overflow: hidden; }
     .bar-fill { height: 100%; width: 0%; transition: width 0.4s ease; }
-    .bar-exp { background-color: #10B981; }
 
     /* 5格分段式進度條 (Segmented Bar) */
     .segmented-bar-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -28,7 +26,7 @@
     .seg-mood.filled { background-color: #7DD3FC; box-shadow: 0 0 6px rgba(125, 211, 252, 0.4); }
 
     /* 頭像區域 */
-    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
     .avatar-wrapper { position: relative; }
     .avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #4B5563; background-color: #374151; }
     .avatar-upload-btn { position: absolute; bottom: 0; right: 0; background: #10B981; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 20px; cursor: pointer; font-size: 16px; font-weight: bold; border: 2px solid #1F2937; }
@@ -122,12 +120,9 @@
             </div>
             <div style="flex: 1;">
                 <div class="status-row" style="margin-bottom: 4px;"><span><span id="p-job" class="highlight-text" style="font-size: 16px;">載入中...</span></span></div>
-                <div class="status-row" style="margin-bottom: 0;"><span>等級: <span id="p-lv" class="highlight-text">1</span> <span id="p-tier" class="tier-text"></span></span></div>
             </div>
             <button class="edit-btn" onclick="window.openModal('modal-config')">設定</button>
         </div>
-        
-        <div class="bar-bg"><div id="p-exp" class="bar-fill bar-exp"></div></div>
         
         <div class="status-row" style="margin-top: 16px;">
             <span>體力: <span id="v-hp" class="highlight-text">5</span>/<span id="v-maxhp">5</span></span>
@@ -234,11 +229,10 @@
         const database = getDatabase(app);
         const dbPath = ref(database, 'saveData/mainProfile');
 
-        const EXP_REQ = 100;
         const qNames = { action: '行動力', willpower: '意志力', learning: '學習力', thinking: '思考力', emotion: '情緒控制力', communication: '溝通能力', insight: '洞察力' };
         
         let db = {
-            player: { lv: 1, exp: 0, cash: 0, job: '未設定', avatar: '' },
+            player: { cash: 0, job: '未設定', avatar: '' },
             res: { hp: 5, mp: 5, mood: 0 },
             qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
             talents: {},
@@ -434,13 +428,6 @@
                 targetName = db.customSkills[act.targetId].name; targetPts = db.customSkills[act.targetId].pts;
             }
 
-            db.player.exp += Math.floor(act.val * 10);
-            if(db.player.exp >= EXP_REQ) {
-                db.player.exp -= EXP_REQ;
-                db.player.lv += 1;
-                showFX("RANK UP!");
-            }
-
             addLog(`[行動] ${act.name}：${targetName} +${act.val}`);
             save(); updateUI();
         }
@@ -449,16 +436,9 @@
             set(dbPath, db).catch((error) => { console.error(error); showFX("錯誤"); }); 
         }
 
-        function getTier(lv) {
-            if(lv <= 5) return "初心者"; if(lv <= 15) return "熟練者"; if(lv <= 30) return "專家"; return "大師";
-        }
-
         function updateUI() {
             if(db.player.avatar) document.getElementById('ui-avatar').src = db.player.avatar;
             document.getElementById('p-job').innerText = db.player.job;
-            document.getElementById('p-lv').innerText = db.player.lv;
-            document.getElementById('p-tier').innerText = `(${getTier(db.player.lv)})`;
-            document.getElementById('p-exp').style.width = (db.player.exp / EXP_REQ * 100) + '%';
             document.getElementById('v-cash').innerText = db.player.cash;
 
             document.getElementById('v-hp').innerText = db.res.hp;
@@ -479,10 +459,10 @@
             }
             document.getElementById('seg-mp-container').innerHTML = mpSegments;
 
-            let moodBlocks = db.res.mood + 3;
+            let moodIndex = db.res.mood + 2;
             let moodSegments = '';
             for(let i=0; i<5; i++) {
-                moodSegments += `<div class="seg-block ${i < moodBlocks ? 'seg-mood filled' : ''}"></div>`;
+                moodSegments += `<div class="seg-block ${i === moodIndex ? 'seg-mood filled' : ''}"></div>`;
             }
             document.getElementById('seg-mood-container').innerHTML = moodSegments;
 
