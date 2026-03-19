@@ -19,10 +19,13 @@
     .bar-exp { background-color: #10B981; }
 
     /* 5格分段式進度條 (Segmented Bar) */
-    .segmented-bar { display: flex; gap: 4px; height: 10px; width: 100%; margin: 6px 0 14px 0; }
+    .segmented-bar-wrapper { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .seg-label { font-size: 11px; color: #9CA3AF; width: 24px; text-align: center; }
+    .segmented-bar { display: flex; gap: 4px; height: 10px; flex: 1; }
     .seg-block { flex: 1; border-radius: 2px; background-color: #374151; transition: background-color 0.3s, box-shadow 0.3s; }
     .seg-hp.filled { background-color: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
     .seg-mp.filled { background-color: #3B82F6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.4); }
+    .seg-mood.filled { background-color: #7DD3FC; box-shadow: 0 0 6px rgba(125, 211, 252, 0.4); }
 
     /* 頭像區域 */
     .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
@@ -30,7 +33,7 @@
     .avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #4B5563; background-color: #374151; }
     .avatar-upload-btn { position: absolute; bottom: 0; right: 0; background: #10B981; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 20px; cursor: pointer; font-size: 16px; font-weight: bold; border: 2px solid #1F2937; }
 
-    /* HP/MP 控制按鈕 */
+    /* 控制按鈕 */
     .res-controls { display: flex; gap: 4px; }
     .res-btn { background: #374151; border: none; color: #D1D5DB; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
     .res-btn:active { background: #4B5563; }
@@ -43,16 +46,16 @@
     .q-btn:active { background: #4B5563; }
     .q-val { font-size: 14px; color: #F3F4F6; font-weight: bold; width: 24px; text-align: center; font-family: monospace; }
 
-    /* 標籤 (天賦/個性/潛能) */
+    /* 標籤 */
     .tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .item-tag { background-color: #374151; color: #E5E7EB; padding: 6px 12px; border-radius: 9999px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
     .del-tag-btn { background: transparent; border: none; color: #EF4444; cursor: pointer; font-size: 12px; padding: 0; display: flex; align-items: center; }
 
-    /* 雙欄佈局 (潛能區塊使用) */
+    /* 雙欄佈局 */
     .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .split-col h2 { font-size: 11px; letter-spacing: 0; }
 
-    /* 技能 (保留進度條) */
+    /* 技能 */
     .skill-section { margin-top: 12px; }
     .custom-item-header { display: flex; justify-content: space-between; align-items: center; margin-top: 8px;}
     .skill-name { color: #E5E7EB; font-size: 13px; font-weight: 600; }
@@ -127,24 +130,46 @@
         <div class="bar-bg"><div id="p-exp" class="bar-fill bar-exp"></div></div>
         
         <div class="status-row" style="margin-top: 16px;">
-            <span>HP: <span id="v-hp" class="highlight-text">5</span>/<span id="v-maxhp">5</span></span>
+            <span>體力: <span id="v-hp" class="highlight-text">5</span>/<span id="v-maxhp">5</span></span>
             <div class="res-controls">
                 <button class="res-btn" onclick="window.adjRes('hp', -1)">-1</button>
                 <button class="res-btn" onclick="window.adjRes('hp', 1)">+1</button>
                 <button class="res-btn" onclick="window.adjRes('hp', 5)">滿</button>
             </div>
         </div>
-        <div class="segmented-bar" id="seg-hp-container"></div>
+        <div class="segmented-bar-wrapper">
+            <span class="seg-label" style="text-align: right;">低</span>
+            <div class="segmented-bar" id="seg-hp-container"></div>
+            <span class="seg-label" style="text-align: left;">高</span>
+        </div>
 
         <div class="status-row">
-            <span>MP: <span id="v-mp" class="highlight-text">5</span>/<span id="v-maxmp">5</span></span>
+            <span>精力: <span id="v-mp" class="highlight-text">5</span>/<span id="v-maxmp">5</span></span>
             <div class="res-controls">
                 <button class="res-btn" onclick="window.adjRes('mp', -1)">-1</button>
                 <button class="res-btn" onclick="window.adjRes('mp', 1)">+1</button>
                 <button class="res-btn" onclick="window.adjRes('mp', 5)">滿</button>
             </div>
         </div>
-        <div class="segmented-bar" id="seg-mp-container"></div>
+        <div class="segmented-bar-wrapper">
+            <span class="seg-label" style="text-align: right;">低</span>
+            <div class="segmented-bar" id="seg-mp-container"></div>
+            <span class="seg-label" style="text-align: left;">高</span>
+        </div>
+
+        <div class="status-row">
+            <span>心境: <span id="v-mood" class="highlight-text">0</span></span>
+            <div class="res-controls">
+                <button class="res-btn" onclick="window.adjRes('mood', -1)">-1</button>
+                <button class="res-btn" onclick="window.adjRes('mood', 1)">+1</button>
+                <button class="res-btn" onclick="window.setMood(0)">歸零</button>
+            </div>
+        </div>
+        <div class="segmented-bar-wrapper">
+            <span class="seg-label" style="text-align: right;">平靜</span>
+            <div class="segmented-bar" id="seg-mood-container"></div>
+            <span class="seg-label" style="text-align: left;">心煩</span>
+        </div>
 
         <div class="status-row" style="margin-top: 12px;"><span>CASH: <span class="highlight-text">HKD <span id="v-cash">0</span></span></span></div>
     </div>
@@ -214,7 +239,7 @@
         
         let db = {
             player: { lv: 1, exp: 0, cash: 0, job: '未設定', avatar: '' },
-            res: { hp: 5, mp: 5 },
+            res: { hp: 5, mp: 5, mood: 0 },
             qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
             talents: {},
             personalities: {},
@@ -237,7 +262,8 @@
                     if(!cloudData.developedPotentials) cloudData.developedPotentials = {};
                     if(!cloudData.customSkills) cloudData.customSkills = {};
                     if(!cloudData.customActions) cloudData.customActions = {};
-                    if(!cloudData.res) cloudData.res = { hp: 5, mp: 5 };
+                    if(!cloudData.res) cloudData.res = { hp: 5, mp: 5, mood: 0 };
+                    if(cloudData.res.mood === undefined) cloudData.res.mood = 0;
                     
                     if(cloudData.res.hp > 5) cloudData.res.hp = 5;
                     if(cloudData.res.mp > 5) cloudData.res.mp = 5;
@@ -284,11 +310,20 @@
                 db.res.hp += val;
                 if(db.res.hp > maxVal) db.res.hp = maxVal;
                 if(db.res.hp < 0) db.res.hp = 0;
-            } else {
+            } else if(type === 'mp') {
                 db.res.mp += val;
                 if(db.res.mp > maxVal) db.res.mp = maxVal;
                 if(db.res.mp < 0) db.res.mp = 0;
+            } else if(type === 'mood') {
+                db.res.mood += val;
+                if(db.res.mood > 2) db.res.mood = 2;
+                if(db.res.mood < -2) db.res.mood = -2;
             }
+            save(); updateUI();
+        }
+
+        window.setMood = function(val) {
+            db.res.mood = val;
             save(); updateUI();
         }
 
@@ -430,6 +465,7 @@
             document.getElementById('v-maxhp').innerText = 5;
             document.getElementById('v-mp').innerText = db.res.mp;
             document.getElementById('v-maxmp').innerText = 5;
+            document.getElementById('v-mood').innerText = db.res.mood > 0 ? '+' + db.res.mood : db.res.mood;
 
             let hpSegments = '';
             for(let i=0; i<5; i++) {
@@ -442,6 +478,13 @@
                 mpSegments += `<div class="seg-block ${i < db.res.mp ? 'seg-mp filled' : ''}"></div>`;
             }
             document.getElementById('seg-mp-container').innerHTML = mpSegments;
+
+            let moodBlocks = db.res.mood + 3;
+            let moodSegments = '';
+            for(let i=0; i<5; i++) {
+                moodSegments += `<div class="seg-block ${i < moodBlocks ? 'seg-mood filled' : ''}"></div>`;
+            }
+            document.getElementById('seg-mood-container').innerHTML = moodSegments;
 
             let qHtml = '';
             for(let key in qNames) {
