@@ -172,9 +172,9 @@
             </div>
         </div>
         <div class="segmented-bar-wrapper">
-            <span class="seg-label" style="text-align: right;">平靜</span>
+            <span class="seg-label" style="text-align: right;">心煩</span>
             <div class="segmented-bar" id="seg-mood-container"></div>
-            <span class="seg-label" style="text-align: left;">心煩</span>
+            <span class="seg-label" style="text-align: left;">平靜</span>
         </div>
 
         <div class="status-row" style="margin-top: 12px;"><span>CASH: <span class="highlight-text">HKD <span id="v-cash">0</span></span></span></div>
@@ -476,8 +476,8 @@
 
             let moodIndex = db.res.mood + 2; 
             let moodClass = 'seg-mood-grey'; // 預設 0 為灰色
-            if (db.res.mood < 0) moodClass = 'seg-mood-blue'; // -1, -2 為淺藍
-            else if (db.res.mood > 0) moodClass = 'seg-mood-red'; // 1, 2 為酒紅
+            if (db.res.mood < 0) moodClass = 'seg-mood-red'; // Swapped: -1, -2 (Left side) Burgandy (Fussy)
+            else if (db.res.mood > 0) moodClass = 'seg-mood-blue'; // Swapped: 1, 2 (Right side) Light Blue (Calm)
 
             let moodSegments = '';
             for(let i=0; i<5; i++) {
