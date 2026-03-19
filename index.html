@@ -23,10 +23,14 @@
     .seg-block { flex: 1; border-radius: 2px; background-color: #374151; transition: background-color 0.3s, box-shadow 0.3s; }
     .seg-hp.filled { background-color: #EF4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
     .seg-mp.filled { background-color: #3B82F6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.4); }
-    .seg-mood.filled { background-color: #7DD3FC; box-shadow: 0 0 6px rgba(125, 211, 252, 0.4); }
+    
+    /* 心境動態變色 */
+    .seg-mood-blue.filled { background-color: #7DD3FC; box-shadow: 0 0 6px rgba(125, 211, 252, 0.4); }
+    .seg-mood-grey.filled { background-color: #9CA3AF; box-shadow: 0 0 6px rgba(156, 163, 175, 0.4); }
+    .seg-mood-red.filled { background-color: #800020; box-shadow: 0 0 6px rgba(128, 0, 32, 0.6); }
 
     /* 頭像區域 */
-    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
+    .avatar-container { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
     .avatar-wrapper { position: relative; }
     .avatar-img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #4B5563; background-color: #374151; }
     .avatar-upload-btn { position: absolute; bottom: 0; right: 0; background: #10B981; color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 20px; cursor: pointer; font-size: 16px; font-weight: bold; border: 2px solid #1F2937; }
@@ -84,8 +88,10 @@
     <div id="modal-config" class="modal-overlay">
         <div class="modal-box">
             <h2 style="border:none; margin-bottom: 10px;">系統參數設定</h2>
+            <label>玩家名字：</label>
+            <input type="text" id="input-name" placeholder="輸入你的名字">
             <label>職業/身分：</label>
-            <input type="text" id="input-job" placeholder="例如：學生、工程師">
+            <input type="text" id="input-job" placeholder="例如：商人、工程師">
             <label>流動資產 (HKD)：</label>
             <input type="number" id="input-cash" placeholder="輸入數字">
             <div style="display: flex; gap: 10px;">
@@ -119,7 +125,12 @@
                 <input type="file" id="avatar-upload" accept="image/*" style="display: none;" onchange="window.handleAvatarUpload(event)">
             </div>
             <div style="flex: 1;">
-                <div class="status-row" style="margin-bottom: 4px;"><span><span id="p-job" class="highlight-text" style="font-size: 16px;">載入中...</span></span></div>
+                <div class="status-row" style="margin-bottom: 2px;">
+                    <span id="p-name" class="highlight-text" style="font-size: 18px;">載入中...</span>
+                </div>
+                <div class="status-row" style="margin-bottom: 0;">
+                    <span style="font-size: 11px; color: #9CA3AF;">職業：<span id="p-job" class="highlight-text" style="font-size: 11px;">載入中...</span></span>
+                </div>
             </div>
             <button class="edit-btn" onclick="window.openModal('modal-config')">設定</button>
         </div>
@@ -232,7 +243,7 @@
         const qNames = { action: '行動力', willpower: '意志力', learning: '學習力', thinking: '思考力', emotion: '情緒控制力', communication: '溝通能力', insight: '洞察力' };
         
         let db = {
-            player: { cash: 0, job: '未設定', avatar: '' },
+            player: { name: '未設定', cash: 0, job: '商人', avatar: '' },
             res: { hp: 5, mp: 5, mood: 0 },
             qualities: { action: 0, willpower: 0, learning: 0, thinking: 0, emotion: 0, communication: 0, insight: 0 },
             talents: {},
@@ -258,6 +269,7 @@
                     if(!cloudData.customActions) cloudData.customActions = {};
                     if(!cloudData.res) cloudData.res = { hp: 5, mp: 5, mood: 0 };
                     if(cloudData.res.mood === undefined) cloudData.res.mood = 0;
+                    if(cloudData.player.name === undefined) cloudData.player.name = '未設定';
                     
                     if(cloudData.res.hp > 5) cloudData.res.hp = 5;
                     if(cloudData.res.mp > 5) cloudData.res.mp = 5;
@@ -323,6 +335,7 @@
 
         window.openModal = function(id) {
             if(id === 'modal-config') {
+                document.getElementById('input-name').value = db.player.name !== '未設定' ? db.player.name : '';
                 document.getElementById('input-job').value = db.player.job !== '未設定' ? db.player.job : '';
                 document.getElementById('input-cash').value = db.player.cash;
             }
@@ -332,7 +345,8 @@
         window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
 
         window.saveConfig = function() {
-            db.player.job = document.getElementById('input-job').value || '未設定';
+            db.player.name = document.getElementById('input-name').value || '未設定';
+            db.player.job = document.getElementById('input-job').value || '商人';
             db.player.cash = parseInt(document.getElementById('input-cash').value) || 0;
             addLog("系統參數已儲存。");
             save(); updateUI(); closeModal('modal-config'); showFX("已儲存");
@@ -438,6 +452,7 @@
 
         function updateUI() {
             if(db.player.avatar) document.getElementById('ui-avatar').src = db.player.avatar;
+            document.getElementById('p-name').innerText = db.player.name;
             document.getElementById('p-job').innerText = db.player.job;
             document.getElementById('v-cash').innerText = db.player.cash;
 
@@ -459,10 +474,14 @@
             }
             document.getElementById('seg-mp-container').innerHTML = mpSegments;
 
-            let moodIndex = db.res.mood + 2;
+            let moodIndex = db.res.mood + 2; 
+            let moodClass = 'seg-mood-grey'; // 預設 0 為灰色
+            if (db.res.mood < 0) moodClass = 'seg-mood-blue'; // -1, -2 為淺藍
+            else if (db.res.mood > 0) moodClass = 'seg-mood-red'; // 1, 2 為酒紅
+
             let moodSegments = '';
             for(let i=0; i<5; i++) {
-                moodSegments += `<div class="seg-block ${i === moodIndex ? 'seg-mood filled' : ''}"></div>`;
+                moodSegments += `<div class="seg-block ${i === moodIndex ? moodClass + ' filled' : ''}"></div>`;
             }
             document.getElementById('seg-mood-container').innerHTML = moodSegments;
 
